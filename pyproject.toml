@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torml"
+version = "0.1.0.dev0"
+description = "A scikit-learn-style machine learning library with a PyTorch backend"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.13"
+authors = [{ name = "torml contributors" }]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["torch>=2.1"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-cov>=4"]
+dev = [
+    "pre-commit>=3",
+    "black==24.*",
+    "isort>=5.13",
+    "flake8>=7",
+    "pylint>=3",
+    "build",
+]
+doc = ["sphinx", "numpydoc", "sphinx-rtd-theme"]
+
+[tool.setuptools.packages.find]
+include = ["torml*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

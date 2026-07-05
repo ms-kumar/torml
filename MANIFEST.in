@@ -1,0 +1,4 @@
+include README.md LICENSE RELEASES.md
+recursive-exclude tests *
+recursive-exclude benchmarks *
+global-exclude __pycache__ *.py[cod]
