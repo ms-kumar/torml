@@ -19,7 +19,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-dependencies = ["torch>=2.1"]
+dependencies = ["torch>=2.1", "numpy>=1.21"]
 
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-cov>=4"]
@@ -43,3 +43,8 @@ target-version = ["py310"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "numpy>=2.2.6",
+]
