@@ -28,6 +28,9 @@ model.predict(X[:5])
 
 ## Documentation
 
+- Docs: [`doc/`](doc/) (`doc/conf.py`, build with `sphinx-build -b html doc doc/_build`)
+- Examples: [`examples/`](examples/) (runnable scripts per module)
+- Benchmarks: [`benchmarks/`](benchmarks/) (excluded from the sdist)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Coding guidelines: [`TORML_CODING_GUIDELINES.md`](TORML_CODING_GUIDELINES.md)
 - Release notes: [`RELEASES.md`](RELEASES.md)

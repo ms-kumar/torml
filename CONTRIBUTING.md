@@ -24,6 +24,12 @@ to import `torml`'s real dependencies (including `torch`). Always run
 `pylint` hook will fail with import errors that have nothing to do with your
 change.
 
+To build the docs under `doc/`, include the `doc` extra as well
+(`uv sync --extra dev --extra test --extra doc`), then run
+`uv run sphinx-build -b html doc doc/_build`. Note that plain
+`uv sync --extra doc` prunes the `dev`/`test` packages, so always list all
+three extras together.
+
 ## Source of truth
 
 - `AGENTS.md` and `TORML_CODING_GUIDELINES.md` are the primary references for
