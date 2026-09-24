@@ -76,3 +76,12 @@ Neighbors
 
    torml.neighbors.KNeighborsClassifier
    torml.neighbors.KNeighborsRegressor
+
+Naive Bayes
+-----------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.naive_bayes.GaussianNB
