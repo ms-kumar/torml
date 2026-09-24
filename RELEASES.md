@@ -6,6 +6,7 @@
 - Added `torml.metrics.accuracy_score`, `torml.metrics.mean_squared_error`, `torml.metrics.r2_score` with tests in `tests/metrics/`.
 - Added `torml.linear_model.LinearRegression` (closed-form via `torch.linalg.lstsq`) and `torml.linear_model.LogisticRegression` with tests in `tests/linear_model/`.
 - Added `torml.model_selection.train_test_split`, `torml.model_selection.KFold`, and `torml.model_selection.cross_val_score` with tests in `tests/model_selection/`.
+- Added `torml.model_selection.GridSearchCV` (exhaustive grid, refit best) with tests in `tests/model_selection/`.
 - Added `torml.preprocessing.StandardScaler`, `torml.preprocessing.MinMaxScaler`, `torml.preprocessing.LabelEncoder`, and `torml.preprocessing.OneHotEncoder` with tests in `tests/preprocessing/`.
 - Added `torml.neighbors.KNeighborsClassifier` and `torml.neighbors.KNeighborsRegressor` (uniform/distance weights, Minkowski `p`, `kneighbors`, `predict_proba`) with tests in `tests/neighbors/`.
 - Added `torml.naive_bayes.GaussianNB` (var smoothing, `predict_proba`/`predict_log_proba`, tensor and string labels) with tests in `tests/naive_bayes/`.

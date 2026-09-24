@@ -54,6 +54,7 @@ Model selection
    torml.model_selection.train_test_split
    torml.model_selection.KFold
    torml.model_selection.cross_val_score
+   torml.model_selection.GridSearchCV
 
 Preprocessing
 -------------
