@@ -7,6 +7,7 @@
 - Added `torml.linear_model.LinearRegression` (closed-form via `torch.linalg.lstsq`) and `torml.linear_model.LogisticRegression` with tests in `tests/linear_model/`.
 - Added `torml.model_selection.train_test_split`, `torml.model_selection.KFold`, and `torml.model_selection.cross_val_score` with tests in `tests/model_selection/`.
 - Added `torml.preprocessing.StandardScaler`, `torml.preprocessing.MinMaxScaler`, `torml.preprocessing.LabelEncoder`, and `torml.preprocessing.OneHotEncoder` with tests in `tests/preprocessing/`.
+- Added `torml.neighbors.KNeighborsClassifier` and `torml.neighbors.KNeighborsRegressor` (uniform/distance weights, Minkowski `p`, `kneighbors`, `predict_proba`) with tests in `tests/neighbors/`.
 
 ### Changed
 - Removed duplicate `torml/metrics.py`; `torml.metrics` package is the single source of truth.
