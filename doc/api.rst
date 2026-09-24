@@ -138,3 +138,14 @@ Support vector machines
 
    torml.svm.LinearSVC
    torml.svm.LinearSVR
+
+Pipelines
+---------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.pipelines.Pipeline
+   torml.pipelines.FeatureUnion
+   torml.pipelines.ColumnTransformer
