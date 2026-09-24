@@ -15,6 +15,10 @@
 - Added `torml.covariance.EmpiricalCovariance` (location/covariance/precision, Mahalanobis, log-likelihood score) with tests in `tests/covariance/`.
 - Added `torml.cross_decomposition.PLSRegression` (NIPALS, single target) with tests in `tests/cross_decomposition/`.
 - Added `torml.feature_extraction.DictVectorizer` with tests in `tests/feature_extraction/`.
+- Added `torml.feature_selection.SelectKBest` with `f_classif` (ANOVA F + exact p-values) with tests in `tests/feature_selection/`.
+- Added `torml.random_projection.GaussianRandomProjection` with `johnson_lindenstrauss_min_dim` with tests in `tests/random_projection/`.
+- Added `torml.discriminant_analysis.LinearDiscriminantAnalysis` (SVD solver) with tests in `tests/discriminant_analysis/`.
+- Added `torml.multivariate.MultiOutputRegressor` and `torml.multivariate.MultiOutputClassifier` with tests in `tests/multivariate/`.
 - Added `torml.cluster.KMeans` (Lloyd, best-of-`n_init` by inertia) and `torml.cluster.DBSCAN` (noise label -1) with tests in `tests/cluster/`.
 - Added `torml.tree.DecisionTreeClassifier` (gini/entropy) and `torml.tree.DecisionTreeRegressor` (squared error) with tests in `tests/tree/`.
 - Added `torml.decomposition.PCA` (full SVD, int/float-ratio `n_components`) with tests in `tests/decomposition/`.

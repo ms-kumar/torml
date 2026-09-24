@@ -140,6 +140,45 @@ Feature extraction
 
    torml.feature_extraction.DictVectorizer
 
+Feature selection
+-----------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.feature_selection.SelectKBest
+   torml.feature_selection.f_classif
+
+Random projection
+-----------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.random_projection.GaussianRandomProjection
+   torml.random_projection.johnson_lindenstrauss_min_dim
+
+Discriminant analysis
+---------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.discriminant_analysis.LinearDiscriminantAnalysis
+
+Multivariate outputs
+--------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.multivariate.MultiOutputRegressor
+   torml.multivariate.MultiOutputClassifier
+
 Clustering
 ----------
 
