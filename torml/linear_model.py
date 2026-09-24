@@ -182,141 +182,164 @@ class LinearRegression(RegressorMixin):
 
 
 class LogisticRegression(ClassifierMixin):
-    """Logistic regression.
+    """Logistic regression for binary classification.
 
-    Logistic regression fits a logistic model using maximum likelihood.
-
-    Read more in the :ref:`User Guide <LogisticRegression>`.
+    Fits a linear model by minimizing binary cross-entropy with L2
+    regularization using full-batch gradient descent.
 
     Parameters
     ----------
     penalty : str, default='l2'
-        Penalty type. Must be one of 'l1', 'l2', 'elasticnet'.
+        Only 'l2' is supported.
     solver : str, default='lbfgs'
-        Algorithm for optimization.
+        Kept for API compatibility; optimization is gradient descent.
+    C : float, default=1.0
+        Inverse regularization strength. Must be > 0.
+    max_iter : int, default=1000
+        Gradient descent steps.
 
     Attributes
     ----------
-    coef_ : ndarray of shape (n_in, n_out)
-        Coefficients of the logistic model.
-    intercept_ : ndarray of shape (n_out,)
-        Intercept of logistic model.
-    classes_ : ndarray of shape (n_classes,)
-        Values of the target in the case of multi-class targets.
+    classes_ : torch.Tensor of shape (2,)
+        Sorted class labels.
+    coef_ : torch.Tensor of shape (n_features,)
+        Weight vector.
+    intercept_ : torch.Tensor of shape (1,)
+        Bias term.
+    n_features_in_ : int
+        Number of features seen during fit.
+    n_iter_ : int
+        Steps actually run.
 
     Examples
     --------
-    >>> from torml import LogisticRegression
     >>> import torch
-    >>> X, y = torch.randn(10, 10), torch.randint(0, 2, (10, 5))
-    >>> model = LogisticRegression(penalty='l2', solver='lbfgs')
-    >>> model.fit(X, y)
-    LogisticRegression(penalty='l2').solver='lbfgs'.fit(X, y)
-
-    Notes
-    -----
-    This model represents a linear model for binary classification.
-
-    The logistic regression minimizes a logistic loss over the training samples:
-
-    .. math::
-
-        (w,b) <- arg\\min_{w,b} \\sum_i L(y^{(i)}, <w, x^{(i)}> + b)
-
-    where L is the logistic loss:
-
-    .. math::
-
-        L(v) = log(1 + \\exp(-y v)) + \\lambda_1 ||w||_2^2 + \\lambda_2 ||w||_1
+    >>> from torml.linear_model import LogisticRegression
+    >>> X = torch.randn(20, 2)
+    >>> y = (X[:, 0] > 0).long()
+    >>> model = LogisticRegression().fit(X, y)
+    >>> model.predict(X[:3])
     """
 
     def __init__(
         self,
         penalty: str = "l2",
         solver: str = "lbfgs",
+        C: float = 1.0,
+        max_iter: int = 1000,
     ):
         super().__init__()
         self.penalty = penalty
         self.solver = solver
+        self.C = C
+        self.max_iter = max_iter
 
     def fit(self, X: torch.Tensor, y: torch.Tensor):
-        """Fit Logistic Regression model.
-
-        Uses Newton's method for optimization.
-
-        Returns
-        -------
-        self : LogisticRegression instance
-            Fitted classifier.
-        """
-        return self._fit(X, y)
-
-    def _fit(self, X: torch.Tensor, y: torch.Tensor):
-        """Fit Logistic Regression model using SGD.
+        """Fit the logistic model with gradient descent.
 
         Parameters
         ----------
         X : torch.Tensor of shape (n_samples, n_features)
             Training data.
         y : torch.Tensor of shape (n_samples,)
-            Target values.
+            Binary class labels.
 
         Returns
         -------
         self : LogisticRegression instance
             Fitted classifier.
         """
-        # Initialize weights and bias
+        if self.penalty != "l2":
+            raise ValueError(f"Only penalty='l2' is supported, got {self.penalty!r}.")
+        if isinstance(self.C, bool) or not isinstance(self.C, (int, float)):
+            raise TypeError(f"C must be a float, got {type(self.C).__name__}.")
+        if float(self.C) <= 0:
+            raise ValueError(f"C must be > 0, got {self.C}.")
+        if isinstance(self.max_iter, bool) or not isinstance(self.max_iter, int):
+            raise TypeError(
+                f"max_iter must be an int, got {type(self.max_iter).__name__}."
+            )
+        if int(self.max_iter) < 1:
+            raise ValueError(f"max_iter must be >= 1, got {self.max_iter}.")
         X, y = check_X_y(X, y)
-        self.classes_, _ = torch.unique(y, return_inverse=True)
-        self.coef_ = torch.zeros(X.shape[1], device=X.device, dtype=torch.float32)
-        self.intercept_ = torch.zeros(1, device=X.device, dtype=torch.float32)
-        self.n_features_in_ = X.shape[1]
         X = X.to(dtype=torch.float32)
-        y = y.to(dtype=torch.float32)
-
-        # SGD hyperparameters
-        learning_rate = 0.01
-        n_epochs = 100
-
-        for _ in range(n_epochs):
-            # Shuffle data for SGD
-            indices = torch.randperm(X.shape[0])
-            X_shuffled = X[indices]
-            y_shuffled = y[indices].unsqueeze(0)
-
-            for i in range(X.shape[0]):
-                x_i = X_shuffled[i]
-                y_i = y_shuffled[i]
-
-                # Predict probability of class 1
-                linear_model = x_i @ self.coef_.t() + self.intercept_
-                pred_proba = torch.sigmoid(linear_model)
-
-                # Gradient for binary classification (BCE derivative)
-                error = pred_proba - y_i.unsqueeze(0)  # Error term for SGD
-
-                # Update weights and intercept
-                self.coef_ -= learning_rate * error @ x_i.t()
-                self.intercept_ -= (
-                    learning_rate * torch.sigmoid(linear_model).mean()
-                )  # Simplified update for intercept
-
-            # Optional: Check convergence/loss here if needed
-
+        flat = y.reshape(-1)
+        classes, inverse = torch.unique(flat, sorted=True, return_inverse=True)
+        if int(classes.shape[0]) != 2:
+            raise ValueError(
+                "LogisticRegression supports binary labels only, "
+                f"got {int(classes.shape[0])} classes."
+            )
+        self.classes_ = classes
+        target = inverse.to(dtype=torch.float32)
+        n_samples, n_features = int(X.shape[0]), int(X.shape[1])
+        self.n_features_in_ = n_features
+        lam = 1.0 / (n_samples * float(self.C))
+        w = torch.zeros(n_features, dtype=torch.float32)
+        b = torch.tensor(0.0)
+        for _ in range(int(self.max_iter)):
+            logits = X @ w + b
+            prob = torch.sigmoid(logits)
+            error = (prob - target) / n_samples
+            w = w - (X.T @ error + lam * w)
+            b = b - error.sum()
+        self.coef_ = w
+        self.intercept_ = b.reshape(1)
+        self.n_iter_ = int(self.max_iter)
         return self
 
-    def predict(self, X: torch.Tensor) -> torch.Tensor:
-        """Predict class labels."""
+    def decision_function(self, X: torch.Tensor) -> torch.Tensor:
+        """Return signed logits for ``X``.
+
+        Parameters
+        ----------
+        X : torch.Tensor of shape (n_samples, n_features)
+            Query points.
+
+        Returns
+        -------
+        scores : torch.Tensor of shape (n_samples,)
+            Positive values predict ``classes_[1]``.
+        """
         check_is_fitted(self, attributes=["coef_", "intercept_"])
         from torml.utils._validation import check_array
 
-        X = check_array(X, ensure_2d=True, dtype=torch.float32)
-        logits = X @ self.coef_ + self.intercept_.squeeze()
-        return (torch.sigmoid(logits) >= 0.5).to(dtype=torch.long)
+        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        if int(Xt.shape[1]) != int(self.n_features_in_):
+            raise ValueError(
+                f"X has {int(Xt.shape[1])} features, but LogisticRegression "
+                f"was fitted with {int(self.n_features_in_)} features."
+            )
+        return Xt @ self.coef_ + self.intercept_.squeeze()
 
-    def score(self, X: torch.Tensor, y: torch.Tensor) -> float:
-        """Compute accuracy score on training data."""
-        from torml.metrics import accuracy_score
+    def predict_proba(self, X: torch.Tensor) -> torch.Tensor:
+        """Return class probabilities for ``X``.
 
-        return accuracy_score(y, self.predict(X))
+        Parameters
+        ----------
+        X : torch.Tensor of shape (n_samples, n_features)
+            Query points.
+
+        Returns
+        -------
+        proba : torch.Tensor of shape (n_samples, 2)
+            Probabilities for ``classes_[0]`` and ``classes_[1]``.
+        """
+        proba_1 = torch.sigmoid(self.decision_function(X))
+        return torch.stack([1 - proba_1, proba_1], dim=1)
+
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
+        """Predict class labels for ``X``.
+
+        Parameters
+        ----------
+        X : torch.Tensor of shape (n_samples, n_features)
+            Query points.
+
+        Returns
+        -------
+        y_pred : torch.Tensor of shape (n_samples,)
+            Predicted labels.
+        """
+        idx = (self.decision_function(X) >= 0).long()
+        return self.classes_[idx]

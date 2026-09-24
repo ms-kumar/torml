@@ -37,6 +37,7 @@
 - Fixed `BaseEstimator.get_params` to return `__init__` params with nested `__` support; fixed `clone(safe=False)` to deepcopy non-estimators.
 - Fixed `check_array` dtype handling (torch.dtype and string), `check_X_y`, `check_is_fitted`, and `check_scalar` validation.
 - Fixed `LinearRegression` to inherit `RegressorMixin` and implement correct `fit`/`predict` with `n_features_in_` validation.
+- Fixed `LogisticRegression` (full-batch gradient descent on L2 binary cross-entropy, `C`/`max_iter`, `decision_function`/`predict_proba`, binary-only) with dedicated tests in `tests/linear_model/`.
 - Fixed `BaseEstimator.score` to score without refitting (required for correct `cross_val_score`).
 
 ### Deprecated

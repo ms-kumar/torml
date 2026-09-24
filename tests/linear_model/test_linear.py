@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from torml.linear_model import LinearRegression
+from torml.linear_model import LinearRegression, LogisticRegression
 
 
 @pytest.fixture(scope="class")
@@ -82,3 +82,64 @@ def test_linear_regression_predict_dimension_mismatch():
     X_predict_short = torch.randn(5, 2)
     with pytest.raises(ValueError):
         model.predict(X_predict_short)
+
+
+@pytest.fixture
+def blobs():
+    torch.manual_seed(0)
+    x0 = torch.randn(40, 2) + torch.tensor([-2.0, 0.0])
+    x1 = torch.randn(40, 2) + torch.tensor([2.0, 0.0])
+    X = torch.cat([x0, x1])
+    y = torch.cat([torch.zeros(40), torch.ones(40)]).long()
+    return X, y
+
+
+class TestLogisticRegression:
+    def test_fit_predict(self, blobs):
+        X, y = blobs
+        clf = LogisticRegression().fit(X, y)
+        assert clf.classes_.tolist() == [0, 1]
+        assert tuple(clf.coef_.shape) == (2,)
+        assert float((clf.predict(X) == y).float().mean()) > 0.9
+
+    def test_proba_and_decision(self, blobs):
+        X, y = blobs
+        clf = LogisticRegression().fit(X, y)
+        proba = clf.predict_proba(X[:5])
+        assert tuple(proba.shape) == (5, 2)
+        torch.testing.assert_close(
+            proba.sum(dim=1), torch.ones(5), rtol=1e-5, atol=1e-5
+        )
+        scores = clf.decision_function(X)
+        pred = torch.where(scores >= 0, clf.classes_[1], clf.classes_[0])
+        assert torch.equal(pred, clf.predict(X))
+
+    def test_score(self, blobs):
+        X, y = blobs
+        assert float(LogisticRegression().fit(X, y).score(X, y)) > 0.9
+
+    def test_not_fitted(self):
+        from torml.utils import NotFittedError
+
+        with pytest.raises((NotFittedError, ValueError)):
+            LogisticRegression().predict(torch.randn(2, 2))
+
+    def test_multiclass_raises(self, blobs):
+        X, _ = blobs
+        with pytest.raises(ValueError, match="binary"):
+            LogisticRegression().fit(X, torch.arange(80) % 3)
+
+    def test_invalid_hyperparams(self, blobs):
+        X, y = blobs
+        with pytest.raises(ValueError, match="penalty"):
+            LogisticRegression(penalty="l1").fit(X, y)
+        with pytest.raises(ValueError, match="C must be"):
+            LogisticRegression(C=0.0).fit(X, y)
+
+    def test_get_params_clone(self, blobs):
+        from torml.base import clone
+
+        X, y = blobs
+        clf = LogisticRegression(C=2.0).fit(X, y)
+        assert clf.get_params()["C"] == 2.0
+        assert isinstance(clone(clf), LogisticRegression)
