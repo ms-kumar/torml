@@ -12,6 +12,7 @@
 - Added `torml.cluster.KMeans` (Lloyd, best-of-`n_init` by inertia) and `torml.cluster.DBSCAN` (noise label -1) with tests in `tests/cluster/`.
 - Added `torml.tree.DecisionTreeClassifier` (gini/entropy) and `torml.tree.DecisionTreeRegressor` (squared error) with tests in `tests/tree/`.
 - Added `torml.decomposition.PCA` (full SVD, int/float-ratio `n_components`) with tests in `tests/decomposition/`.
+- Added `torml.ensemble.VotingClassifier`/`VotingRegressor` (hard/soft vote, nested `name__param`), `torml.ensemble.BaggingClassifier`/`BaggingRegressor`, and `torml.ensemble.RandomForestClassifier`/`RandomForestRegressor` with tests in `tests/ensemble/`.
 - Added `doc/` Sphinx site (`conf.py`, quickstart, user guide, API reference; builds with `sphinx-build`), runnable `examples/` per module, and `benchmarks/` skeleton.
 
 ### Changed

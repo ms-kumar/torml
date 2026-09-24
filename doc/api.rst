@@ -114,3 +114,17 @@ Decomposition
    :recursive:
 
    torml.decomposition.PCA
+
+Ensemble
+--------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.ensemble.VotingClassifier
+   torml.ensemble.VotingRegressor
+   torml.ensemble.BaggingClassifier
+   torml.ensemble.BaggingRegressor
+   torml.ensemble.RandomForestClassifier
+   torml.ensemble.RandomForestRegressor
