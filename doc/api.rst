@@ -85,3 +85,13 @@ Naive Bayes
    :recursive:
 
    torml.naive_bayes.GaussianNB
+
+Clustering
+----------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.cluster.KMeans
+   torml.cluster.DBSCAN
