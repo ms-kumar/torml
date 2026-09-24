@@ -149,3 +149,21 @@ Pipelines
    torml.pipelines.Pipeline
    torml.pipelines.FeatureUnion
    torml.pipelines.ColumnTransformer
+
+Manifold
+--------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.manifold.MDS
+
+Gaussian processes
+------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.gaussian_process.GaussianProcessRegressor

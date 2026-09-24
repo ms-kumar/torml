@@ -15,6 +15,8 @@
 - Added `torml.ensemble.VotingClassifier`/`VotingRegressor` (hard/soft vote, nested `name__param`), `torml.ensemble.BaggingClassifier`/`BaggingRegressor`, and `torml.ensemble.RandomForestClassifier`/`RandomForestRegressor` with tests in `tests/ensemble/`.
 - Added `torml.svm.LinearSVC` and `torml.svm.LinearSVR` (Pegasos sub-gradient) with tests in `tests/svm/`.
 - Added `torml.pipelines.Pipeline` (nested `name__param`, predict/transform/score routing), `torml.pipelines.FeatureUnion`, and `torml.pipelines.ColumnTransformer` with tests in `tests/pipelines/`.
+- Added `torml.manifold.MDS` (classical scaling, euclidean/precomputed) with tests in `tests/manifold/`.
+- Added `torml.gaussian_process.GaussianProcessRegressor` (RBF, posterior std, LML) with tests in `tests/gaussian_process/`.
 - Added `doc/` Sphinx site (`conf.py`, quickstart, user guide, API reference; builds with `sphinx-build`), runnable `examples/` per module, and `benchmarks/` skeleton.
 
 ### Changed
