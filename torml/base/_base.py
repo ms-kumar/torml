@@ -279,7 +279,7 @@ class BaseEstimator:
     def score(
         self, X: torch.Tensor, y: torch.Tensor | None = None
     ) -> float | torch.Tensor:
-        """Predict on training data and calculate score.
+        """Score predictions against targets without refitting.
 
         Parameters
         ----------
@@ -293,7 +293,6 @@ class BaseEstimator:
         score : float or torch.Tensor
             The model score (R², accuracy, etc).
         """
-        self.fit(X, y)
         return self._score(X, y)
 
     def _score(
