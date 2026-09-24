@@ -105,3 +105,12 @@ Trees
 
    torml.tree.DecisionTreeClassifier
    torml.tree.DecisionTreeRegressor
+
+Decomposition
+-------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.decomposition.PCA
