@@ -1,5 +1,8 @@
 # torml
 
+[![CI](https://github.com/ms-kumar/torml/actions/workflows/ci.yml/badge.svg)](https://github.com/ms-kumar/torml/actions/workflows/ci.yml)
+[![Tests](https://github.com/ms-kumar/torml/actions/workflows/test.yml/badge.svg)](https://github.com/ms-kumar/torml/actions/workflows/test.yml)
+
 `torml` is a scikit-learn-style machine learning library implemented from
 scratch with [PyTorch](https://pytorch.org/) (`torch.Tensor`, `torch.linalg`)
 as its numerical backend, instead of NumPy/SciPy.
