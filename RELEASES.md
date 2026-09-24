@@ -12,6 +12,9 @@
 - Added `torml.mixture.GaussianMixture` (full-covariance EM) with tests in `tests/mixture/`.
 - Added `torml.multiclass.OneVsRestClassifier` with tests in `tests/multiclass/`.
 - Added `torml.semi_supervised.LabelPropagation` (kNN graph, hard clamping, transductive) with tests in `tests/semi_supervised/`.
+- Added `torml.covariance.EmpiricalCovariance` (location/covariance/precision, Mahalanobis, log-likelihood score) with tests in `tests/covariance/`.
+- Added `torml.cross_decomposition.PLSRegression` (NIPALS, single target) with tests in `tests/cross_decomposition/`.
+- Added `torml.feature_extraction.DictVectorizer` with tests in `tests/feature_extraction/`.
 - Added `torml.cluster.KMeans` (Lloyd, best-of-`n_init` by inertia) and `torml.cluster.DBSCAN` (noise label -1) with tests in `tests/cluster/`.
 - Added `torml.tree.DecisionTreeClassifier` (gini/entropy) and `torml.tree.DecisionTreeRegressor` (squared error) with tests in `tests/tree/`.
 - Added `torml.decomposition.PCA` (full SVD, int/float-ratio `n_components`) with tests in `tests/decomposition/`.

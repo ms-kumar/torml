@@ -113,6 +113,33 @@ Semi-supervised
 
    torml.semi_supervised.LabelPropagation
 
+Covariance
+----------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.covariance.EmpiricalCovariance
+
+Cross decomposition
+-------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.cross_decomposition.PLSRegression
+
+Feature extraction
+------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.feature_extraction.DictVectorizer
+
 Clustering
 ----------
 
