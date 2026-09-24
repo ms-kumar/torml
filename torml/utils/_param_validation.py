@@ -5,14 +5,11 @@ Validation functions for estimator parameters.
 
 from __future__ import annotations
 
-import inspect
-from typing import Literal, Sequence
+from typing import Sequence
 
 
 class InvalidParameterError(ValueError):
     """Raised when a parameter does not meet validation constraints."""
-
-    pass
 
 
 class Interval:
@@ -110,8 +107,7 @@ class StrOptions:
         """Check if x is in the valid strings."""
         if self.case_sensitive:
             return x in self.valid_strings
-        else:
-            return str(x).lower() in {s.lower() for s in self.valid_strings}
+        return str(x).lower() in {s.lower() for s in self.valid_strings}
 
     def __repr__(self):
         return f"{repr(self.valid_strings)}"
@@ -179,7 +175,7 @@ def validate_parameter_constraints(
             raise InvalidParameterError(
                 f"The {parameter_name!r} parameter is not specified."
             )
-        elif not allow_unknown_params:
+        if not allow_unknown_params:
             if invalid_name_message is not None:
                 raise InvalidParameterError(invalid_name_message)
             raise InvalidParameterError(
@@ -191,7 +187,7 @@ def validate_parameter_constraints(
     for validation_object in constraints:
         if validation_object is None:
             continue
-        elif isinstance(constraints[0], Interval):
+        if isinstance(constraints[0], Interval):
             if not validation_object(original_param):
                 return validation_object(original_param)
         elif isinstance(validation_object, StrOptions):
@@ -208,7 +204,7 @@ def validate_parameter_constraints(
                     f"'{validation_object.names}', got {validation_object}'."
                 )
         elif callable(validation_object):
-            if not (validation_object(original_param)):
+            if not validation_object(original_param):
                 raise InvalidParameterError(
                     f"The {parameter_name!r} parameter does not pass the "
                     f"{validation_object} validator."
@@ -219,7 +215,6 @@ def validate_parameter_constraints(
             raise InvalidParameterError(
                 f"The {parameter_name!r} parameter is not specified."
             )
-        else:
-            constraints = []
+        constraints = []
 
     return parameter_name, original_param

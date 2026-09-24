@@ -67,8 +67,6 @@ def indices_to_mask(indices: torch.Tensor, n_samples: int):
     mask : np.ndarray
         Binary mask array where 1 indicates selected samples.
     """
-    from numpy.random import choice
-
     mask = np.zeros((n_samples,), dtype=np.uint8)
     mask[indices] = 1
     return mask

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from torml.utils._random import RandomState, check_random_state
+from torml.utils._random import check_random_state
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ class TestCheckRandomState:
     def test_int_seed_matches_input(self, seed):
         """Test that int seed converts properly."""
         rng = check_random_state(seed)
-        assert isinstance(seed, (int, float))
+        assert isinstance(rng, torch.Generator)
 
     def test_generator_passed(self, generator):
         """Test that passing a torch.Generator returns it."""

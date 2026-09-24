@@ -30,8 +30,6 @@ class NotFittedError(ValueError):
     Subclass of :class:`ValueError`.
     """
 
-    pass
-
 
 def check_array(
     array,

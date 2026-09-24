@@ -5,8 +5,6 @@ For version checking in tests and validation.
 
 from __future__ import annotations
 
-import packaging.version
-
 
 def get_min_version(package: str) -> tuple[int, int, int]:
     """Get minimum version tuple for a package from pyproject.toml.

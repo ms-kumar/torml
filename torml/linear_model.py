@@ -98,7 +98,7 @@ class LinearRegression(RegressorMixin):
         else:
             X_aug = X
 
-        solution, *_ = torch.linalg.lstsq(X_aug, y)
+        solution, *_ = torch.linalg.lstsq(X_aug, y)  # pylint: disable=not-callable
         solution = solution.squeeze(1)
         if self.fit_intercept:
             self.coef_ = solution[:-1]
@@ -279,7 +279,7 @@ class LogisticRegression(ClassifierMixin):
         learning_rate = 0.01
         n_epochs = 100
 
-        for epoch in range(n_epochs):
+        for _ in range(n_epochs):
             # Shuffle data for SGD
             indices = torch.randperm(X.shape[0])
             X_shuffled = X[indices]

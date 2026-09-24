@@ -5,10 +5,6 @@ Generic testing utilities that check if estimators follow conventions.
 
 from __future__ import annotations
 
-import warnings
-
-import torch
-
 
 def check_estimator(estimator):
     """Test that estimators conform to API conventions.
@@ -44,7 +40,7 @@ def check_estimator(estimator):
         if type(estimator).__name__ not in repr_str:
             raise AssertionError("repr missing class name")
     except Exception as e:
-        raise AssertionError(f"repr failed: {e}")
+        raise AssertionError(f"repr failed: {e}") from e
 
     # Test estimator name
     name = repr_str.split(".")[0]

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 import torch
+
 from torml.linear_model import LinearRegression
-from torml.utils._validation import check_array
 
 
 @pytest.fixture(scope="class")

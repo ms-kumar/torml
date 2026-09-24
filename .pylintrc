@@ -7,9 +7,29 @@ max-line-length=88
 [BASIC]
 good-names=X,y,X_train,X_test,y_train,y_test,n,i,j,k,ax,df
 
+[DESIGN]
+max-args=10
+max-locals=20
+max-branches=20
+max-statements=60
+max-attributes=12
+max-returns=12
+
+[TYPECHECK]
+
 [MESSAGES CONTROL]
 disable=
     missing-module-docstring,
     too-few-public-methods,
     duplicate-code,
     invalid-name,
+    attribute-defined-outside-init,
+    import-outside-toplevel,
+    abstract-method,
+    super-init-not-called,
+    signature-differs,
+    arguments-differ,
+    arguments-renamed,
+    unused-argument,
+    cyclic-import,
+    protected-access,

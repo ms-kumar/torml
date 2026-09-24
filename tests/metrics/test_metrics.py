@@ -5,14 +5,15 @@ This file contains tests for mean_squared_error, r2_score, and accuracy_score.
 
 import pytest
 import torch
-from torml.metrics import mean_squared_error, r2_score, accuracy_score
+
+from torml.metrics import accuracy_score, mean_squared_error, r2_score
 
 
 def test_mean_squared_error():
     """Test MSE calculation."""
     y_true = torch.tensor([1.0, 2.0, 3.0])
     y_pred = torch.tensor([1.5, 2.5, 3.5])
-    # Expected MSE: ((0.5)^2 + (-0.5)^2 + (-0.5)^2) / 3 = (0.25 + 0.25 + 0.25) / 3 = 0.75 / 3 = 0.25
+    # Expected MSE: mean of squared 0.5 errors = 0.25
     assert mean_squared_error(y_true, y_pred) == pytest.approx(0.25)
 
 

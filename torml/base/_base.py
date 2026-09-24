@@ -131,7 +131,7 @@ class BaseEstimator:
             params = self.get_params(deep=False)
             param_str = ", ".join(f"{k}={v!r}" for k, v in params.items())
             return f"{type(self).__name__}({param_str})"
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             return f"<{self.name}>"
 
     def _more_tags(self) -> dict:
@@ -167,7 +167,7 @@ class BaseEstimator:
         else:
             try:
                 tags["X"]["dtype"] = torch.as_tensor(X).dtype
-            except Exception:
+            except (TypeError, ValueError, RuntimeError):
                 tags["X"]["dtype"] = None
 
         if hasattr(X, "device"):
@@ -227,6 +227,10 @@ class BaseEstimator:
             Fitted estimator with attributes set. Returns self for chaining.
         """
         raise NotImplementedError(f"fit not implemented for {self.name}")
+
+    def _transform(self, X: torch.Tensor) -> torch.Tensor:
+        """Transform X. Subclasses override to implement custom transform."""
+        raise NotImplementedError
 
     def transform(self, X: torch.Tensor) -> torch.Tensor:
         """Transform X using this estimator.
@@ -498,8 +502,7 @@ class CloneMixin:
 
         if deep:
             return copy.deepcopy(self)
-        else:
-            return copy.copy(self)
+        return copy.copy(self)
 
     def copy(self, deep=False):
         """Copy this object.
@@ -517,8 +520,7 @@ class CloneMixin:
 
         if deep:
             return deepcopy.deepcopy(self)
-        else:
-            # Create a shallow copy that copies __dict__ attributes
-            result = type(self)()
-            result.__dict__.update(self.__dict__)
-            return result
+        # Create a shallow copy that copies __dict__ attributes
+        result = type(self)()
+        result.__dict__.update(self.__dict__)
+        return result

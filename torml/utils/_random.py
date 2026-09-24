@@ -5,8 +5,6 @@ Utilities for managing random state in estimators.
 
 from __future__ import annotations
 
-from typing import Literal
-
 import torch
 
 
@@ -49,9 +47,9 @@ class RandomState:
 
     def __repr__(self) -> str:
         if self.seed is None:
-            return f"<RandomState, seed={torch.initial_seed() + self.gen.initial_state[0]}>"
-        else:
-            return f"<RandomState, seed={self.seed}>"
+            initial = self.gen.initial_seed()
+            return f"<RandomState, seed={torch.initial_seed() + initial}>"
+        return f"<RandomState, seed={self.seed}>"
 
     def __setattr__(self, key, value):
         attr = key[8:]  # Remove 'RandomState_' prefix if present
@@ -105,7 +103,7 @@ class RandomState:
         self._manual_seed = False
         if seed is None:
             raise AssertionError("Cannot set a None seed state.")
-        elif isinstance(seed, int):
+        if isinstance(seed, int):
             self._seed = seed
 
         self._update_state(seed)

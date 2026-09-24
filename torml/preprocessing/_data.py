@@ -185,7 +185,7 @@ class MinMaxScaler(TransformerMixin):
                 "feature_range must be a tuple (min, max) of numbers, " f"got {fr!r}."
             )
         lo, hi = float(fr[0]), float(fr[1])
-        if not lo < hi:
+        if lo >= hi:
             raise ValueError(f"feature_range min must be < max, got ({lo}, {hi}).")
         return lo, hi
 

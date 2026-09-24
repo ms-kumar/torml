@@ -5,7 +5,7 @@ Utilities for managing estimator tags.
 
 from __future__ import annotations
 
-from collections import ChainMap, defaultdict
+from collections import ChainMap
 
 import numpy as np
 
@@ -77,11 +77,7 @@ def get_tags(estimator):
         },
     }.get(type(estimator).__name__, {}):
         combined = ChainMap(_DEFAULT_TAGS, all_tags)
-        tags = {
-            k: combined[k][tag]
-            for k, tag in combined.items()
-            if tag not in _DEFAULT_TAGS
-        }
+        tags = {k: v[v] for k, v in combined.items() if v not in _DEFAULT_TAGS}
         tags = _concatenate_tags(tags, ["_transform_inv"], {})
         tags = _add_X_to_tags(tags, estimator_name)
 
@@ -89,7 +85,7 @@ def get_tags(estimator):
         tags = _add_custom_X_tags(tags, estimator._get_tags())
 
     # Add estimator type
-    for mixin_name, estimator_type in {
+    for _mixin_name, estimator_type in {
         "ClassifierMixin": "classifier",
         "RegressorMixin": "regressor",
         "ClusterMixin": "clusterer",
@@ -104,13 +100,6 @@ def get_tags(estimator):
 def _get_X_tag(tags, dim=1):
     """Get tag associated with the 'X' key."""
     return tags["X"] if "X" in tags and len(tags["X"]) else _DEFAULT_TAG_VALUES
-
-    # For the specific case
-    tag = tags.get("X", _DEFAULT_TAG_VALUES)
-    if dim is not None:
-        return tag.get(f"X_{dim}", tag["X"])
-    else:
-        return tag["X"] if isinstance(tag, list) else tag
 
 
 def _add_custom_X_tags(tags, tags_from_estimator):
@@ -163,7 +152,7 @@ def _add_X_to_tags(tags, estimator_name):
     if not {"_estimator_type", "name"} & set(tags.get("X", {}).keys()):
         tags["X"]["name"] = f"{estimator_name}X"
 
-    for key in {"_estimator_type", "name"}:
+    for key in ("_estimator_type", "name"):
         if key not in tags["X"]:
             tags["X"][key] = None
 
