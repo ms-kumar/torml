@@ -114,7 +114,7 @@ class StrOptions:
             return str(x).lower() in {s.lower() for s in self.valid_strings}
 
     def __repr__(self):
-        return f'{repr(self.valid_strings)}'
+        return f"{repr(self.valid_strings)}"
 
 
 class HasMethods:

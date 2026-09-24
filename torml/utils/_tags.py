@@ -9,7 +9,6 @@ from collections import ChainMap, defaultdict
 
 import numpy as np
 
-
 _DEFAULT_TAGS = {
     "X_types": "1d/2d",
     "require_x": True,
@@ -78,7 +77,11 @@ def get_tags(estimator):
         },
     }.get(type(estimator).__name__, {}):
         combined = ChainMap(_DEFAULT_TAGS, all_tags)
-        tags = {k: combined[k][tag] for k, tag in combined.items() if tag not in _DEFAULT_TAGS}
+        tags = {
+            k: combined[k][tag]
+            for k, tag in combined.items()
+            if tag not in _DEFAULT_TAGS
+        }
         tags = _concatenate_tags(tags, ["_transform_inv"], {})
         tags = _add_X_to_tags(tags, estimator_name)
 

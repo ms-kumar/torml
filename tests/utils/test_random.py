@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from torml.utils._random import check_random_state, RandomState
+from torml.utils._random import RandomState, check_random_state
 
 
 @pytest.fixture

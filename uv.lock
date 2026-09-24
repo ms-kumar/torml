@@ -1331,9 +1331,6 @@ name = "torml"
 version = "0.1.0.dev0"
 source = { editable = "." }
 dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "torch" },
 ]
 
@@ -1371,7 +1368,6 @@ requires-dist = [
     { name = "build", marker = "extra == 'dev'" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=7" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13" },
-    { name = "numpy", specifier = ">=1.21" },
     { name = "numpydoc", marker = "extra == 'doc'" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=3" },

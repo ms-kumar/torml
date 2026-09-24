@@ -6,6 +6,7 @@ Generic testing utilities that check if estimators follow conventions.
 from __future__ import annotations
 
 import warnings
+
 import torch
 
 
@@ -31,16 +32,16 @@ def check_estimator(estimator):
     original_params = estimator.get_params()
     reconstructed = estimator.set_params(**original_params)
     new_params = reconstructed.get_params()
-    
+
     if original_params != new_params:
         raise AssertionError("get_params/set_params failed")
-    
+
     # Test repr doesn't raise or return type
     try:
         repr_str = repr(estimator)
         if not isinstance(repr_str, str):
             raise AssertionError("repr must return string")
-        if "torml" not in repr_str.lower():
+        if type(estimator).__name__ not in repr_str:
             raise AssertionError("repr missing class name")
     except Exception as e:
         raise AssertionError(f"repr failed: {e}")
@@ -49,7 +50,7 @@ def check_estimator(estimator):
     name = repr_str.split(".")[0]
     if not name:
         raise AssertionError("Estimator failed validation. No name")
-    
+
     if not name.endswith("Regressor") and not name.endswith("Classifier"):
         raise AssertionError(
             f"Estimator {name!r} is not named to indicate it is "
@@ -58,6 +59,7 @@ def check_estimator(estimator):
 
     # Test clone
     from torml.base import clone
+
     cloned_estimator = clone(estimator)
     if cloned_estimator is estimator:
         raise AssertionError("Clone returned original")

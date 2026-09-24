@@ -7,15 +7,8 @@ estimator checks for testing.
 
 from __future__ import annotations
 
-from ._validation import (
-    NotFittedError,
-    check_array,
-    check_X_y,
-    check_is_fitted,
-    check_scalar,
-    column_or_1d,
-)
-
+from ._estimator_checks import check_estimator
+from ._mask import indices_to_mask, safe_mask
 from ._param_validation import (
     HasMethods,
     Interval,
@@ -23,14 +16,16 @@ from ._param_validation import (
     StrOptions,
     validate_parameter_constraints,
 )
-
 from ._random import RandomState, check_random_state
-
-from ._mask import indices_to_mask, safe_mask
-
 from ._tags import _DEFAULT_TAGS, get_tags
-
-from ._estimator_checks import check_estimator
+from ._validation import (
+    NotFittedError,
+    check_array,
+    check_is_fitted,
+    check_scalar,
+    check_X_y,
+    column_or_1d,
+)
 
 __all__ = [
     "check_array",

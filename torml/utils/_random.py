@@ -105,8 +105,6 @@ class RandomState:
         self._manual_seed = False
         if seed is None:
             raise AssertionError("Cannot set a None seed state.")
-        elif isinstance(seed, np.random.RandomState):
-            self._seed = seed.randint(int(2 ** 31), dtype=np.int64)
         elif isinstance(seed, int):
             self._seed = seed
 

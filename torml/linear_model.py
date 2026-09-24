@@ -7,13 +7,11 @@ from __future__ import annotations
 
 import torch
 
-import numpy as np
-
-from torml.base import BaseEstimator, RegressorMixin, ClassifierMixin, clone
-from torml.utils import check_X_y, check_is_fitted
+from torml.base import ClassifierMixin, RegressorMixin
+from torml.utils import check_is_fitted, check_X_y
 
 
-class LinearRegression(BaseEstimator, RegressorMixin):
+class LinearRegression(RegressorMixin):
     """Linear regression.
 
     Linear regression fits a linear model using least squares.
@@ -89,59 +87,51 @@ class LinearRegression(BaseEstimator, RegressorMixin):
 
     def _fit(self, X: torch.Tensor, y: torch.Tensor):
         """Fit linear model with linear least squares."""
-        # Fit linear model w = (X*X')^-1 X*y
+        X, y = check_X_y(X, y)
+        X = X.to(dtype=torch.float32)
+        y = y.to(dtype=torch.float32).reshape(-1, 1)
+        self.n_features_in_ = X.shape[1]
 
-        # Reshape y to column vector
-        y = y.reshape(-1, 1)
-
-        X = X.t()
-
-        # Compute intercept if fit_intercept is True
         if self.fit_intercept:
-            X_mean = X.mean(dim=0, keepdim=True)
-            y_mean = y.mean()
-            X = X - X_mean.t()
-            y = y - y_mean
-
-        w, *_ = torch.linalg.lstsq(X, y)
-
-        self.w_ = w.squeeze(1)
-        if self.fit_intercept:
-            self.intercept_ = y_mean.unsqueeze(0)
+            ones = torch.ones(X.shape[0], 1, dtype=X.dtype, device=X.device)
+            X_aug = torch.cat([X, ones], dim=1)
         else:
-            self.intercept_ = None
+            X_aug = X
+
+        solution, *_ = torch.linalg.lstsq(X_aug, y)
+        solution = solution.squeeze(1)
+        if self.fit_intercept:
+            self.coef_ = solution[:-1]
+            self.intercept_ = solution[-1:]
+        else:
+            self.coef_ = solution
+            self.intercept_ = torch.zeros(1, dtype=X.dtype, device=X.device)
 
         return self
-
-    def _predict(self, X: torch.Tensor):
-        """Apply linear model."""
-        X = X.t()
-
-        if self.fit_intercept:
-            X_mean = X.mean(dim=0, keepdim=True)
-            X = X - X_mean.t()
-
-        y = X @ self.w_
-
-        if self.fit_intercept:
-            y = y + self.intercept_
-
-        return y
 
     def predict(self, X: torch.Tensor):
         """Predict using the linear model.
 
         Parameters
         ----------
-        X : np.ndarray of shape (n_samples, n_features)
+        X : torch.Tensor of shape (n_samples, n_features)
             Test samples.
 
         Returns
         -------
-        y : ndarray of shape (n_samples,)
+        y : torch.Tensor of shape (n_samples,)
             Predictions.
         """
-        return self._check_X(X)
+        check_is_fitted(self, attributes=["coef_", "intercept_"])
+        from torml.utils._validation import check_array
+
+        X = check_array(X, ensure_2d=True, dtype=torch.float32)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"X has {X.shape[1]} features, but {type(self).__name__} "
+                f"was fitted with {self.n_features_in_} features."
+            )
+        return X @ self.coef_ + self.intercept_.squeeze()
 
     def _more_tags(self):
         return {"_estimator_type": "regressor"}
@@ -160,7 +150,6 @@ class LinearRegression(BaseEstimator, RegressorMixin):
 
         # Check features
         if isinstance(X.mean(dim=0), torch.Tensor):
-            X_mean = X.mean(dim=0)
             std = X.std(dim=0)
             scale = torch.reciprocal(std)
             X = X * scale
@@ -192,7 +181,7 @@ class LinearRegression(BaseEstimator, RegressorMixin):
         )
 
 
-class LogisticRegression(BaseEstimator, ClassifierMixin):
+class LogisticRegression(ClassifierMixin):
     """Logistic regression.
 
     Logistic regression fits a logistic model using maximum likelihood.
@@ -260,6 +249,8 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
         self : LogisticRegression instance
             Fitted classifier.
         """
+        return self._fit(X, y)
+
     def _fit(self, X: torch.Tensor, y: torch.Tensor):
         """Fit Logistic Regression model using SGD.
 
@@ -276,9 +267,13 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
             Fitted classifier.
         """
         # Initialize weights and bias
-        self.coef_ = torch.zeros(X.shape[1], device=X.device, dtype=X.dtype)
-        self.intercept_ = torch.zeros(1, device=X.device, dtype=X.dtype)
-        self.n_in_samples_ = X.shape[0]
+        X, y = check_X_y(X, y)
+        self.classes_, _ = torch.unique(y, return_inverse=True)
+        self.coef_ = torch.zeros(X.shape[1], device=X.device, dtype=torch.float32)
+        self.intercept_ = torch.zeros(1, device=X.device, dtype=torch.float32)
+        self.n_features_in_ = X.shape[1]
+        X = X.to(dtype=torch.float32)
+        y = y.to(dtype=torch.float32)
 
         # SGD hyperparameters
         learning_rate = 0.01
@@ -298,19 +293,30 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
                 linear_model = x_i @ self.coef_.t() + self.intercept_
                 pred_proba = torch.sigmoid(linear_model)
 
-                # Calculate loss gradient (for binary classification, this is equivalent to BCE derivative)
-                error = pred_proba - y_i.unsqueeze(0) # Error term for SGD
-                
+                # Gradient for binary classification (BCE derivative)
+                error = pred_proba - y_i.unsqueeze(0)  # Error term for SGD
+
                 # Update weights and intercept
                 self.coef_ -= learning_rate * error @ x_i.t()
-                self.intercept_ -= learning_rate * torch.sigmoid(linear_model).mean() # Simplified update for intercept
-                
+                self.intercept_ -= (
+                    learning_rate * torch.sigmoid(linear_model).mean()
+                )  # Simplified update for intercept
+
             # Optional: Check convergence/loss here if needed
 
         return self
 
-    def score(self, X: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
+        """Predict class labels."""
+        check_is_fitted(self, attributes=["coef_", "intercept_"])
+        from torml.utils._validation import check_array
+
+        X = check_array(X, ensure_2d=True, dtype=torch.float32)
+        logits = X @ self.coef_ + self.intercept_.squeeze()
+        return (torch.sigmoid(logits) >= 0.5).to(dtype=torch.long)
+
+    def score(self, X: torch.Tensor, y: torch.Tensor) -> float:
         """Compute accuracy score on training data."""
         from torml.metrics import accuracy_score
 
-        return accuracy_score(y, X @ self.coef_)
+        return accuracy_score(y, self.predict(X))

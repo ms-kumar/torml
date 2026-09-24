@@ -5,11 +5,23 @@ Shared validation functions for checking inputs and fitted state.
 
 from __future__ import annotations
 
-import warnings
-from typing import Literal, Sequence
+from typing import Sequence
 
-import numpy
 import torch
+
+
+def _normalize_dtype(dtype) -> torch.dtype:
+    """Normalize dtype given as torch.dtype or string to torch.dtype."""
+    if isinstance(dtype, torch.dtype):
+        return dtype
+    if isinstance(dtype, str):
+        try:
+            return getattr(torch, dtype)
+        except AttributeError as e:
+            raise ValueError(f"Unknown dtype string {dtype!r}.") from e
+    raise TypeError(
+        f"dtype must be a torch.dtype or string, got {type(dtype).__name__}."
+    )
 
 
 class NotFittedError(ValueError):
@@ -24,7 +36,7 @@ class NotFittedError(ValueError):
 def check_array(
     array,
     *,
-    dtype: Literal["float32", "float64", "int32", "int64"] = torch.float32,
+    dtype=torch.float32,
     ensure_2d: bool = True,
     allow_nd: bool = False,
     copy: bool = False,
@@ -72,10 +84,9 @@ def check_array(
         If ``array`` does not pass validation (wrong shape, contains NaN/Inf, etc.).
     """
     # Convert to tensor
+    dtype = _normalize_dtype(dtype)
     if isinstance(array, torch.Tensor):
-        tensor = array
-    elif isinstance(array, numpy.ndarray):
-        tensor = torch.as_tensor(numpy.asarray(array), dtype=dtype)
+        tensor = array.to(dtype=dtype) if array.dtype != dtype else array
     else:
         try:
             tensor = torch.as_tensor(array, dtype=dtype)
@@ -118,12 +129,10 @@ def check_array(
     # Check for all-finite
     if force_all_finite:
         if torch.isnan(tensor).any() or torch.isinf(tensor).any():
-            raise ValueError(
-                f"{input_name} contains NaN or infinite values."
-            )
+            raise ValueError(f"{input_name} contains NaN or infinite values.")
 
     # Return copy if needed
-    if copy and tensor.device.type == "cpu" and hasattr(array, "copy"):
+    if copy:
         tensor = tensor.clone()
 
     return tensor
@@ -133,7 +142,6 @@ def check_X_y(
     X,
     y,
     *,
-    accept_sparse=False,
     ensure_all_finite=True,
     input_name_X="X",
     input_name_y="y",
@@ -156,9 +164,14 @@ def check_X_y(
     Xt, y_t : tuple of (np.ndarray, np.ndarray) or torch.Tensor, torch.Tensor
         Processed arrays.
     """
-    X_tensor = check_array(X, ensure_2d=True, accept_sparse=accept_sparse)
+    X_tensor = check_array(
+        X, ensure_2d=True, force_all_finite=ensure_all_finite, input_name=input_name_X
+    )
     y_tensor = check_array(
-        y, ensure_2d=False, accept_sparse=accept_sparse, input_name=input_name_y
+        y,
+        ensure_2d=False,
+        force_all_finite=ensure_all_finite,
+        input_name=input_name_y,
     )
 
     if X_tensor.shape[0] != y_tensor.shape[0]:
@@ -184,11 +197,16 @@ def column_or_1d(y: Sequence) -> torch.Tensor:
         Converted array, guaranteed to be 1D.
     """
     y_tensor = check_array(
-        y, ensure_2d=True, accept_sparse=False, dtype=torch.float32, input_name="y"
+        y, ensure_2d=False, allow_nd=False, dtype=torch.float32, input_name="y"
     )
 
-    if y_tensor.shape[0] == 1 and y_tensor.ndim == 2:
-        y_tensor = y_tensor.squeeze(0)
+    if y_tensor.ndim > 1:
+        y_tensor = y_tensor.squeeze()
+        if y_tensor.ndim != 1:
+            raise ValueError(
+                "y should be a 1D array, got an array of shape "
+                f"{tuple(y_tensor.shape)} instead."
+            )
 
     return y_tensor
 
@@ -216,13 +234,13 @@ def check_is_fitted(estimator, attributes=None, *, msg: str | None = None):
         If the estimator is not fitted.
     """
     if attributes is None:
-        fitted_attributes = ("coefs", "labels_", "labels_", "coef_", "intercept_")
+        fitted_attributes = ("coef_", "intercept_", "labels_", "classes_")
     else:
         fitted_attributes = attributes
 
-    for name, _ in fitted_attributes:
+    for name in fitted_attributes:
         if not hasattr(estimator, name):
-            msg_to_show = f"The {name!r} attribute of the object " "was not found."
+            msg_to_show = "This instance is not fitted yet. Call 'fit' first."
             if msg is None:
                 msg = msg_to_show
             else:
@@ -236,7 +254,7 @@ def check_is_fitted(estimator, attributes=None, *, msg: str | None = None):
 def check_scalar(
     x,
     name: str,
-    target_type: Sequence[str] | str,
+    target_type,
     *,
     min_val: int | float | None = None,
     max_val: int | float | None = None,
@@ -250,8 +268,9 @@ def check_scalar(
         Value to check.
     name : str
         Name of the scalar for error messages.
-    target_type : list of str or str, default=["int", "float", "bool"]
-        Valid target types for x.
+    target_type : type or tuple of types
+        Valid target types for x (e.g. ``int``, ``float``, ``(int, float)``).
+        Strings ``"int"``/``"float"``/``"bool"`` are also accepted.
     min_val : int or float or None, default=None
         Lower bound on the value.
     max_val : int or float or None, default=None
@@ -268,27 +287,24 @@ def check_scalar(
     Raises
     ------
     TypeError
-        If x is not one of the target types or is None (if all targets are int/float).
+        If x is not one of the target types.
     ValueError
         If x is outside the valid bounds.
     """
-    if not isinstance(target_type, Sequence):
-        target_type = [target_type]
-    elif len(target_type) < 2 and target_type[0] == "str":
-        target_type = target_type[0]
+    _str_to_type = {"int": int, "float": float, "bool": bool, "str": str}
+    if isinstance(target_type, str):
+        target_type = _str_to_type.get(target_type, None) or target_type
+    elif isinstance(target_type, (list, tuple)):
+        converted = tuple(
+            _str_to_type.get(t, t) if isinstance(t, str) else t for t in target_type
+        )
+        target_type = converted
 
     if not isinstance(x, target_type):
-        if target_type == "int":
-            raise TypeError("An integer is required")
-        elif target_type == "float":
-            raise TypeError("A float is required")
-        elif target_type == "bool":
-            raise TypeError("A boolean is required")
-        else:
-            raise TypeError(f"The {name} parameter type must be one of {target_type}")
-    elif x is None:
-        if target_type not in ["int", "float", "bool"]:
-            return x
+        raise TypeError(
+            f"The {name!r} parameter must be of type {target_type}. "
+            f"Got {type(x).__name__} instead."
+        )
 
     if isinstance(x, torch.Tensor):
         x_value = float(x.item())
@@ -309,15 +325,7 @@ def check_scalar(
                 f"Got {x_value}."
             )
 
-    # Convert to target type
-    if target_type == "int":
-        return int(x)
-    elif target_type == "float":
-        return float(x)
-    elif target_type == "bool":
-        return bool(x)
-    else:
-        return x
+    return x
 
 
 def has_fit_parameter(estimator, parameter: str) -> bool:
@@ -338,9 +346,7 @@ def has_fit_parameter(estimator, parameter: str) -> bool:
     import inspect
 
     parameters = [
-        p
-        for p, v in inspect.signature(estimator.fit).parameters.items()
-        if p != "self"
+        p for p, v in inspect.signature(estimator.fit).parameters.items() if p != "self"
     ]
 
     return parameter in parameters

@@ -19,7 +19,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-dependencies = ["torch>=2.1", "numpy>=1.21"]
+dependencies = ["torch>=2.1"]
 
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-cov>=4"]

@@ -9,10 +9,20 @@ from __future__ import annotations
 import inspect
 import reprlib
 
-import numpy as np
 import torch
 
-from ._base import BaseEstimator, ClassifierMixin, RegressorMixin, TransformerMixin, ClusterMixin, clone, is_classifier, is_regressor, is_clusterer, CloneMixin
+from ._base import (
+    BaseEstimator,
+    ClassifierMixin,
+    CloneMixin,
+    ClusterMixin,
+    RegressorMixin,
+    TransformerMixin,
+    clone,
+    is_classifier,
+    is_clusterer,
+    is_regressor,
+)
 from ._estimator_checks import check_estimator
 
 __all__ = [

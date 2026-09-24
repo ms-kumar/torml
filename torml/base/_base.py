@@ -6,13 +6,10 @@ Core classes for estimator functionality.
 from __future__ import annotations
 
 import inspect
-import reprlib
 
 import torch
 
-import numpy
-
-from torml.utils._validation import check_is_fitted, NotFittedError
+from torml.utils._validation import check_is_fitted
 
 
 class _MixinABC(type):
@@ -69,16 +66,23 @@ class BaseEstimator:
         dict
             Dictionary of parameter name -> parameter values.
         """
-        params = {"_estimator_type": self._estimator_type}
-
-        if deep:
-            # Get all instance attributes
-            all_params = vars(self)
-            # Get params from __init__ signature
-            sig = inspect.signature(self.__init__)
-            init_params = list(sig.parameters.keys())[1:]  # Skip 'self'
-            params = {k: v for k, v in all_params.items() if k in init_params}
-
+        init_sig = inspect.signature(self.__init__)
+        init_params = [p for p in init_sig.parameters if p != "self"]
+        params = {}
+        for key in init_params:
+            if hasattr(self, key):
+                value = getattr(self, key)
+            else:
+                # Fall back to class-level default if instance attr missing.
+                default = init_sig.parameters[key].default
+                if default is inspect.Parameter.empty:
+                    continue
+                value = default
+            params[key] = value
+            if deep and isinstance(value, BaseEstimator):
+                nested = value.get_params(deep=True)
+                for n_key, n_val in nested.items():
+                    params[f"{key}__{n_key}"] = n_val
         return params
 
     def set_params(self, **params) -> "BaseEstimator":
@@ -123,7 +127,12 @@ class BaseEstimator:
         str
             String representation of the object.
         """
-        return f"<{self.name}>"
+        try:
+            params = self.get_params(deep=False)
+            param_str = ", ".join(f"{k}={v!r}" for k, v in params.items())
+            return f"{type(self).__name__}({param_str})"
+        except Exception:
+            return f"<{self.name}>"
 
     def _more_tags(self) -> dict:
         """Tags for this estimator.
@@ -156,7 +165,10 @@ class BaseEstimator:
         if hasattr(X, "dtype"):
             tags["X"]["dtype"] = X.dtype
         else:
-            tags["X"]["dtype"] = numpy.result_type(*X)
+            try:
+                tags["X"]["dtype"] = torch.as_tensor(X).dtype
+            except Exception:
+                tags["X"]["dtype"] = None
 
         if hasattr(X, "device"):
             tags["X"]["device"] = X.device
@@ -264,7 +276,9 @@ class BaseEstimator:
         fit_return = self.fit(X, y)
         return fit_return.transform(X)
 
-    def score(self, X: torch.Tensor, y: torch.Tensor | None = None) -> float | torch.Tensor:
+    def score(
+        self, X: torch.Tensor, y: torch.Tensor | None = None
+    ) -> float | torch.Tensor:
         """Predict on training data and calculate score.
 
         Parameters
@@ -282,7 +296,9 @@ class BaseEstimator:
         self.fit(X, y)
         return self._score(X, y)
 
-    def _score(self, X: torch.Tensor, y: torch.Tensor | None = None) -> float | torch.Tensor:
+    def _score(
+        self, X: torch.Tensor, y: torch.Tensor | None = None
+    ) -> float | torch.Tensor:
         """Compute score. Override to implement custom score, calls base."""
         raise NotImplementedError
 
@@ -314,6 +330,8 @@ class RegressorMixin(BaseEstimator):
         from torml.metrics import r2_score
 
         y_pred = self.predict(X)
+        if y is None:
+            raise ValueError("y must be provided for regression score")
         return r2_score(y, y_pred)
 
 
@@ -391,17 +409,16 @@ def clone(estimator, *, safe: bool = True) -> "BaseEstimator":
 
         return copy.deepcopy(estimator)
 
-    # Get params deep to include all subclass params
-    params = estimator.get_params(deep=True)
-    
+    # Get params to include all subclass params, excluding nested __ params.
+    params = estimator.get_params(deep=False)
+
     # Use the estimator's __init__ signature to know what params it accepts
-    init_params = estimator.__class__.__init__.__code__
     sig_params = set(inspect.signature(estimator.__class__.__init__).parameters.keys())
-    sig_params.discard('self')
-    
+    sig_params.discard("self")
+
     # Filter params to only include those the init accepts
     filtered_params = {k: v for k, v in params.items() if k in sig_params}
-    
+
     return estimator.__class__(**filtered_params)
 
 
@@ -461,29 +478,30 @@ def is_clusterer(estimator) -> bool:
 
 class CloneMixin:
     """CloneMixin for cloning without deep copy."""
-    
+
     def __init__(self):
         pass
-    
+
     def clone(self, deep=False):
         """Clone this object.
-        
+
         Parameters
         ----------
         deep : bool, default=False
             If True, use deep copy.
-            
+
         Returns
         -------
         CloneMixin
             A cloned instance.
         """
         import copy
+
         if deep:
             return copy.deepcopy(self)
         else:
             return copy.copy(self)
-    
+
     def copy(self, deep=False):
         """Copy this object.
 
@@ -497,11 +515,11 @@ class CloneMixin:
         A copy instance.
         """
         import copy as deepcopy
+
         if deep:
             return deepcopy.deepcopy(self)
         else:
             # Create a shallow copy that copies __dict__ attributes
-            obj = type(self)()
-            obj.__dict__.copy()
-            obj.__dict__.update(self.__dict__)
-            return obj
+            result = type(self)()
+            result.__dict__.update(self.__dict__)
+            return result

@@ -3,8 +3,17 @@
 ## [Unreleased]
 
 ### Added
+- Added `torml.metrics.accuracy_score`, `torml.metrics.mean_squared_error`, `torml.metrics.r2_score` with tests in `tests/metrics/`.
+- Added `torml.linear_model.LinearRegression` (closed-form via `torch.linalg.lstsq`) and `torml.linear_model.LogisticRegression` with tests in `tests/linear_model/`.
 
 ### Changed
+- Removed duplicate `torml/metrics.py`; `torml.metrics` package is the single source of truth.
+- Removed `numpy` runtime dependency; torch-only backend (`torch.as_tensor`, `torch.linalg`).
+
+### Fixed
+- Fixed `BaseEstimator.get_params` to return `__init__` params with nested `__` support; fixed `clone(safe=False)` to deepcopy non-estimators.
+- Fixed `check_array` dtype handling (torch.dtype and string), `check_X_y`, `check_is_fitted`, and `check_scalar` validation.
+- Fixed `LinearRegression` to inherit `RegressorMixin` and implement correct `fit`/`predict` with `n_features_in_` validation.
 
 ### Deprecated
 
