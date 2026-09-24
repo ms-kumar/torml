@@ -14,10 +14,9 @@ class RandomState:
     Parameters
     ----------
     seed : int or None
-        If set (not None), generate fresh seed using np.random.default_rng()
-        and set seed using generator().
-    random_state : np.random.BitGenerator or torch.Generator
-        If not None, use this random number generator state.
+        If set (not None), seed used to initialize the generator.
+    random_state : torch.Generator or int or None
+        If not None, use this seed or generator state.
 
     Attributes
     ----------
@@ -74,30 +73,10 @@ class RandomState:
 
         self.seed = seed
         self.gen = torch.Generator()
-        if isinstance(self.gen, torch.Generator):
-            if seed is not None:
-                torch.manual_seed(seed)
-            self._manual_seed = True
-            self.gen.manual_seed(seed)
-        else:
-            seed = self.seed
-            self._seed = seed
-            self._manual_seed = True
-            self.seed = None
-            if seed is not None:
-                self._seed = seed
-                from numpy.random import default_rng
-
-                self.gen = default_rng(seed)
-                # Reset the initial seed number
-                initial_num_seed = self.gen.initial_state[0]
-                self.gen._state = (
-                    seed if isinstance(seed, int) else self._seed + initial_num_seed,
-                    (0, 0, 0, 0),
-                    seed if isinstance(seed, int) else self._seed + initial_num_seed,
-                    (),
-                )
-                self.gen._state_update()
+        if seed is not None:
+            torch.manual_seed(seed)
+        self._manual_seed = True
+        self.gen.manual_seed(seed)
 
     def _set_state(self, seed):
         self._manual_seed = False
@@ -141,8 +120,6 @@ class RandomState:
         ValueError
             If seed is not None, and not an integer.
         """
-        # np.random.RandomState is not a subclass of int
-        # np.random.Generator is a subclass of np.random.RandomState
         # torch.Generator is not a subclass of int
         if seed is not None and not isinstance(seed, (int, type(self))):
             raise TypeError("seed must be an integer or None")

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections import ChainMap
 
-import numpy as np
+import torch
 
 _DEFAULT_TAGS = {
     "X_types": "1d/2d",
@@ -161,7 +161,7 @@ def _add_X_to_tags(tags, estimator_name):
 
 # Default tag values
 _DEFAULT_TAG_VALUES = {
-    "dtype": np.float64,
+    "dtype": torch.float64,
     "int": True,
     "min_": True,
     "max_": True,

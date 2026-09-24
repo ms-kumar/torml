@@ -5,7 +5,6 @@ Utilities for creating masks and handling indices.
 
 from __future__ import annotations
 
-import numpy as np
 import torch
 
 
@@ -64,9 +63,16 @@ def indices_to_mask(indices: torch.Tensor, n_samples: int):
 
     Returns
     -------
-    mask : np.ndarray
-        Binary mask array where 1 indicates selected samples.
+    mask : torch.Tensor
+        Binary mask tensor where 1 indicates selected samples.
     """
-    mask = np.zeros((n_samples,), dtype=np.uint8)
-    mask[indices] = 1
+    if not isinstance(n_samples, int) or isinstance(n_samples, bool):
+        raise TypeError(f"n_samples must be an int, got {type(n_samples).__name__}.")
+    if n_samples < 0:
+        raise ValueError(f"n_samples must be >= 0, got {n_samples}.")
+    idx = torch.as_tensor(indices, dtype=torch.long).reshape(-1)
+    if idx.numel() > 0 and (bool((idx < 0).any()) or bool((idx >= n_samples).any())):
+        raise ValueError("indices contains out-of-bounds entries.")
+    mask = torch.zeros((n_samples,), dtype=torch.uint8)
+    mask[idx] = 1
     return mask
