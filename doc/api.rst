@@ -128,3 +128,13 @@ Ensemble
    torml.ensemble.BaggingRegressor
    torml.ensemble.RandomForestClassifier
    torml.ensemble.RandomForestRegressor
+
+Support vector machines
+-----------------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.svm.LinearSVC
+   torml.svm.LinearSVR
