@@ -9,6 +9,9 @@
 - Added `torml.preprocessing.StandardScaler`, `torml.preprocessing.MinMaxScaler`, `torml.preprocessing.LabelEncoder`, and `torml.preprocessing.OneHotEncoder` with tests in `tests/preprocessing/`.
 - Added `torml.neighbors.KNeighborsClassifier` and `torml.neighbors.KNeighborsRegressor` (uniform/distance weights, Minkowski `p`, `kneighbors`, `predict_proba`) with tests in `tests/neighbors/`.
 - Added `torml.naive_bayes.GaussianNB` (var smoothing, `predict_proba`/`predict_log_proba`, tensor and string labels) with tests in `tests/naive_bayes/`.
+- Added `torml.mixture.GaussianMixture` (full-covariance EM) with tests in `tests/mixture/`.
+- Added `torml.multiclass.OneVsRestClassifier` with tests in `tests/multiclass/`.
+- Added `torml.semi_supervised.LabelPropagation` (kNN graph, hard clamping, transductive) with tests in `tests/semi_supervised/`.
 - Added `torml.cluster.KMeans` (Lloyd, best-of-`n_init` by inertia) and `torml.cluster.DBSCAN` (noise label -1) with tests in `tests/cluster/`.
 - Added `torml.tree.DecisionTreeClassifier` (gini/entropy) and `torml.tree.DecisionTreeRegressor` (squared error) with tests in `tests/tree/`.
 - Added `torml.decomposition.PCA` (full SVD, int/float-ratio `n_components`) with tests in `tests/decomposition/`.

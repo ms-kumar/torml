@@ -86,6 +86,33 @@ Naive Bayes
 
    torml.naive_bayes.GaussianNB
 
+Mixture
+-------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.mixture.GaussianMixture
+
+Multiclass
+----------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.multiclass.OneVsRestClassifier
+
+Semi-supervised
+---------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.semi_supervised.LabelPropagation
+
 Clustering
 ----------
 
