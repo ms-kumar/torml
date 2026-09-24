@@ -12,6 +12,7 @@ from torml.neighbors import KNeighborsClassifier
 
 
 def main() -> None:
+    """Run the k-neighbors classification example."""
     torch.manual_seed(3)
     x0 = torch.randn(50, 2) + torch.tensor([-2.0, 0.0])
     x1 = torch.randn(50, 2) + torch.tensor([2.0, 0.0])

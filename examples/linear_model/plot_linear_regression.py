@@ -13,12 +13,14 @@ from torml.model_selection import train_test_split
 
 
 def main() -> None:
+    """Run the linear regression example."""
     torch.manual_seed(0)
     X = torch.randn(200, 3)
     true_coef = torch.tensor([1.0, 2.0, -1.0])
     y = X @ true_coef + 0.5 + 0.1 * torch.randn(200)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+    split = train_test_split(X, y, random_state=0)
+    X_train, X_test, y_train, y_test = split[0], split[1], split[2], split[3]
     model = LinearRegression().fit(X_train, y_train)
     print(f"coef: {model.coef_.tolist()}")
     print(f"intercept: {model.intercept_.tolist()}")

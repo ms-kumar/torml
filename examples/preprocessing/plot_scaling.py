@@ -11,6 +11,7 @@ from torml.preprocessing import LabelEncoder, StandardScaler
 
 
 def main() -> None:
+    """Run the scaling and encoding example."""
     torch.manual_seed(2)
     X = torch.randn(10, 2) * 10 + 5
     scaler = StandardScaler().fit(X)

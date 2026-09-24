@@ -14,6 +14,7 @@ from torml.linear_model import LinearRegression
 
 
 def bench(n_samples: int = 5000, n_features: int = 20, repeats: int = 5) -> None:
+    """Time LinearRegression fit/predict and print mean milliseconds."""
     torch.manual_seed(0)
     X = torch.randn(n_samples, n_features)
     y = X.sum(dim=1)

@@ -12,6 +12,7 @@ from torml.model_selection import cross_val_score
 
 
 def main() -> None:
+    """Run the cross-validation example."""
     torch.manual_seed(1)
     X = torch.randn(100, 2)
     y = 2 * X[:, 0] - X[:, 1] + 0.1 * torch.randn(100)
