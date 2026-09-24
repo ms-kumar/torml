@@ -95,3 +95,13 @@ Clustering
 
    torml.cluster.KMeans
    torml.cluster.DBSCAN
+
+Trees
+-----
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   torml.tree.DecisionTreeClassifier
+   torml.tree.DecisionTreeRegressor

@@ -10,6 +10,7 @@
 - Added `torml.neighbors.KNeighborsClassifier` and `torml.neighbors.KNeighborsRegressor` (uniform/distance weights, Minkowski `p`, `kneighbors`, `predict_proba`) with tests in `tests/neighbors/`.
 - Added `torml.naive_bayes.GaussianNB` (var smoothing, `predict_proba`/`predict_log_proba`, tensor and string labels) with tests in `tests/naive_bayes/`.
 - Added `torml.cluster.KMeans` (Lloyd, best-of-`n_init` by inertia) and `torml.cluster.DBSCAN` (noise label -1) with tests in `tests/cluster/`.
+- Added `torml.tree.DecisionTreeClassifier` (gini/entropy) and `torml.tree.DecisionTreeRegressor` (squared error) with tests in `tests/tree/`.
 - Added `doc/` Sphinx site (`conf.py`, quickstart, user guide, API reference; builds with `sphinx-build`), runnable `examples/` per module, and `benchmarks/` skeleton.
 
 ### Changed
