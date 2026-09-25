@@ -6,6 +6,7 @@ import pytest
 import torch
 
 from torml.base import check_estimator as base_check
+from torml.cluster import KMeans
 from torml.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
@@ -14,15 +15,13 @@ from torml.ensemble import (
     VotingClassifier,
     VotingRegressor,
 )
-from torml.cluster import KMeans
 from torml.linear_model import LinearRegression, LogisticRegression
 from torml.mixture import GaussianMixture
 from torml.multivariate import MultiOutputRegressor
 from torml.naive_bayes import GaussianNB
 from torml.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from torml.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from torml.utils import check_estimator as utils_check
-from torml.utils import check_estimator
+from torml.utils import check_estimator, check_estimator as utils_check
 
 
 @pytest.fixture
