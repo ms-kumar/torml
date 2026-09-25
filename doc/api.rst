@@ -1,8 +1,14 @@
 API reference
 =============
 
+Every estimator follows the same conventions (see :doc:`user_guide/supervised`):
+hyperparameters in ``__init__``, ``fit`` returns ``self``, learned
+attributes end with ``_``.
+
 Base
 ----
+
+Estimator base class, cloning, and mixins.
 
 .. autosummary::
    :toctree: _autosummary
@@ -11,6 +17,9 @@ Base
 
 Utils
 -----
+
+Input validation, fitted-state checks, and random-state handling shared by
+all estimators.
 
 .. autosummary::
    :toctree: _autosummary
@@ -22,6 +31,8 @@ Utils
 Metrics
 -------
 
+Scoring functions for classification and regression.
+
 .. autosummary::
    :toctree: _autosummary
    torml.metrics.accuracy_score
@@ -31,6 +42,8 @@ Metrics
 Linear models
 -------------
 
+Closed-form least squares and gradient-descent logistic regression.
+
 .. autosummary::
    :toctree: _autosummary
    torml.linear_model.LinearRegression
@@ -38,6 +51,8 @@ Linear models
 
 Model selection
 ---------------
+
+Splitting, cross-validation, and exhaustive grid search.
 
 .. autosummary::
    :toctree: _autosummary
@@ -49,6 +64,8 @@ Model selection
 Preprocessing
 -------------
 
+Scaling, categorical encoding, and label encoding.
+
 .. autosummary::
    :toctree: _autosummary
    torml.preprocessing.StandardScaler
@@ -59,6 +76,8 @@ Preprocessing
 Neighbors
 ---------
 
+Vote/average over the nearest training points.
+
 .. autosummary::
    :toctree: _autosummary
    torml.neighbors.KNeighborsClassifier
@@ -67,12 +86,16 @@ Neighbors
 Naive Bayes
 -----------
 
+Gaussian likelihoods with per-class means and variances.
+
 .. autosummary::
    :toctree: _autosummary
    torml.naive_bayes.GaussianNB
 
 Mixture
 -------
+
+Full-covariance Gaussian mixtures fitted with EM.
 
 .. autosummary::
    :toctree: _autosummary
@@ -81,12 +104,16 @@ Mixture
 Multiclass
 ----------
 
+One-vs-rest wrapper turning binary estimators multiclass.
+
 .. autosummary::
    :toctree: _autosummary
    torml.multiclass.OneVsRestClassifier
 
 Semi-supervised
 ---------------
+
+Label propagation over a kNN graph (transductive).
 
 .. autosummary::
    :toctree: _autosummary
@@ -95,12 +122,16 @@ Semi-supervised
 Covariance
 ----------
 
+Empirical mean/covariance/precision with Mahalanobis distances.
+
 .. autosummary::
    :toctree: _autosummary
    torml.covariance.EmpiricalCovariance
 
 Cross decomposition
 -------------------
+
+PLS regression onto latent directions that explain ``y``.
 
 .. autosummary::
    :toctree: _autosummary
@@ -109,12 +140,16 @@ Cross decomposition
 Feature extraction
 ------------------
 
+Dictionary rows to numeric matrices.
+
 .. autosummary::
    :toctree: _autosummary
    torml.feature_extraction.DictVectorizer
 
 Feature selection
 -----------------
+
+ANOVA F-scores with exact p-values, and top-k selection.
 
 .. autosummary::
    :toctree: _autosummary
@@ -124,6 +159,8 @@ Feature selection
 Random projection
 -----------------
 
+JL-lemma Gaussian projection for fast dimensionality cuts.
+
 .. autosummary::
    :toctree: _autosummary
    torml.random_projection.GaussianRandomProjection
@@ -132,6 +169,8 @@ Random projection
 Discriminant analysis
 ---------------------
 
+LDA classification with an optional discriminant projection.
+
 .. autosummary::
    :toctree: _autosummary
    torml.discriminant_analysis.LinearDiscriminantAnalysis
@@ -139,19 +178,17 @@ Discriminant analysis
 Multivariate outputs
 --------------------
 
+One clone per target column, for regression and classification.
+
 .. autosummary::
    :toctree: _autosummary
    torml.multivariate.MultiOutputRegressor
    torml.multivariate.MultiOutputClassifier
 
-.. toctree::
-   :hidden:
-   :glob:
-
-   _autosummary/*
-
 Clustering
 ----------
+
+Center-based, density-based, and helper prediction methods.
 
 .. autosummary::
    :toctree: _autosummary
@@ -161,6 +198,8 @@ Clustering
 Trees
 -----
 
+CART trees with gini/entropy/squared-error splits.
+
 .. autosummary::
    :toctree: _autosummary
    torml.tree.DecisionTreeClassifier
@@ -169,12 +208,16 @@ Trees
 Decomposition
 -------------
 
+Full-SVD principal component analysis.
+
 .. autosummary::
    :toctree: _autosummary
    torml.decomposition.PCA
 
 Ensemble
 --------
+
+Voting, bagging, and random forests built on the estimators above.
 
 .. autosummary::
    :toctree: _autosummary
@@ -188,6 +231,8 @@ Ensemble
 Support vector machines
 -----------------------
 
+Pegasos sub-gradient linear SVMs for classification and regression.
+
 .. autosummary::
    :toctree: _autosummary
    torml.svm.LinearSVC
@@ -195,6 +240,8 @@ Support vector machines
 
 Pipelines
 ---------
+
+Chaining, concatenation, and column-wise composition.
 
 .. autosummary::
    :toctree: _autosummary
@@ -205,6 +252,8 @@ Pipelines
 Manifold
 --------
 
+Classical scaling preserving pairwise distances.
+
 .. autosummary::
    :toctree: _autosummary
    torml.manifold.MDS
@@ -212,6 +261,14 @@ Manifold
 Gaussian processes
 ------------------
 
+Exact RBF inference with posterior uncertainty.
+
 .. autosummary::
    :toctree: _autosummary
    torml.gaussian_process.GaussianProcessRegressor
+
+.. toctree::
+   :hidden:
+   :glob:
+
+   _autosummary/*

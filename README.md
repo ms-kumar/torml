@@ -105,6 +105,25 @@ pipe = Pipeline(
 More in [`examples/`](examples/) (one runnable script per module) and the
 [user guide](doc/user_guide/supervised.rst).
 
+## How we compare
+
+Head-to-head against scikit-learn 1.9.1 (same data, same seeds, CPU;
+rerun with `uv run --with scikit-learn python benchmarks/compare_sklearn.py`):
+
+| task | metric | torml | scikit-learn |
+| --- | --- | --- | --- |
+| linreg | R² | 0.999596 | 0.999596 |
+| kmeans | inertia (lower better) | 14235.3 | 14271.8 |
+| knn | accuracy | 0.9240 | 0.9240 |
+| tree | accuracy | 1.0000 | 1.0000 |
+| scaler | max \|diff\| | 4.77e-07 | reference |
+
+Correctness matches everywhere; timings are in the same class except tree
+fitting (~2x slower — Cython vs Python loops). torml's real edges are
+torch-native differentiable I/O, one runtime dependency, and exact
+statistics. Full honest write-up (including where sklearn wins):
+[user guide comparison](doc/user_guide/comparison.rst).
+
 ## Documentation
 
 - API reference + user guide: [`doc/`](doc/) — build with
