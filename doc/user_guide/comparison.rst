@@ -20,14 +20,14 @@ task                metric                  torml              scikit-learn
 =================== ======================= ================== ==================
 linreg fit          seconds (best of 3)     0.0006             0.0009
 linreg              R²                      0.999596           0.999596
-kmeans fit          seconds (best of 3)     0.0318             0.0289
+kmeans fit          seconds (best of 3)     0.0292             0.0278
 kmeans              inertia (lower better)  14235.3            14271.8
 knn fit             seconds (best of 3)     0.0000             0.0003
-knn predict-1000    seconds                 0.0050             0.0054
+knn predict-1000    seconds                 0.0055             0.0057
 knn                 accuracy                0.9240             0.9240
-tree fit            seconds (best of 3)     0.0011             0.0006
+tree fit            seconds (best of 3)     0.0010             0.0006
 tree                accuracy                1.0000             1.0000
-scaler              seconds (best of 3)     0.0006             0.0005
+scaler              seconds (best of 3)     0.0005             0.0005
 scaler              max |diff| vs sklearn   4.77e-07           reference
 torch-native        backward() thru predict True               n/a (numpy out)
 =================== ======================= ================== ==================
