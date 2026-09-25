@@ -5,14 +5,22 @@
 ### Added
 
 ### Changed
+- Changed `torml.model_selection.GridSearchCV` docs: added `examples/model_selection/plot_grid_search.py`.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- Fixed Bandit scan scope to `torml/` (test asserts no longer reported as B101).
+- Fixed `check_estimator` name check (class name instead of full repr) and params round-trip comparison.
+- Fixed `get_tags` mixin detection (was crashing on every estimator).
+- Fixed `RandomState` attribute bookkeeping (reset/pickle/seed handling).
+- Fixed `MultiOutputRegressor`/`MultiOutputClassifier` nested `estimator__param` support.
 
 ### Security
+- Bumped `setuptools` 81.0.0 to 84.0.0 (CVE-2026-59890).
+- Pinned GitHub Actions to commit SHAs; added Dependabot config and `SECURITY.md`.
 
 ### Contributors
 
