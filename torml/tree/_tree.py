@@ -184,7 +184,7 @@ class DecisionTreeClassifier(
         except TypeError as e:
             raise TypeError("Labels must be sortable.") from e
         self.classes_ = (
-            torch.as_tensor(uniq)
+            torch.as_tensor(uniq, device=X.device)
             if all(
                 isinstance(v, (int, float)) and not isinstance(v, bool) for v in uniq
             )
@@ -358,7 +358,7 @@ class DecisionTreeRegressor(
         from torml.utils._validation import check_X_y as _check_X_y
 
         X, y = _check_X_y(X, y)
-        target = y.to(dtype=X.dtype).reshape(-1)
+        target = y.to(dtype=X.dtype, device=X.device).reshape(-1)
         self.n_features_in_ = int(X.shape[1])
         self._left, self._right, self._feature = [], [], []
         self._threshold, self._impurity, self._n_node_samples, self._values = (

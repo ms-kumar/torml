@@ -81,7 +81,10 @@ def train_test_split(
     if not isinstance(shuffle, bool):
         raise TypeError(f"shuffle must be a bool, got {type(shuffle).__name__}.")
 
-    generator = check_random_state(random_state)
+    generator = check_random_state(
+        random_state,
+        arrays[0].device if isinstance(arrays[0], torch.Tensor) else None,
+    )
 
     n_samples = _num_samples(arrays[0])
     if n_samples < 2:
@@ -233,7 +236,9 @@ class KFold(BaseEstimator):
             )
         if not self.shuffle and self.random_state is not None:
             raise ValueError("random_state must be None when shuffle=False.")
-        generator = check_random_state(self.random_state)
+        generator = check_random_state(
+            self.random_state, X.device if isinstance(X, torch.Tensor) else None
+        )
 
         n_samples = _num_samples(X)
         if n_samples < self.n_splits:

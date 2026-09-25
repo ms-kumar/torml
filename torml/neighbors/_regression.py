@@ -65,7 +65,7 @@ class KNeighborsRegressor(RegressorMixin):
         p = _validate_p(self.p)
         self._p = p
         X, y = check_X_y(X, y)
-        y = y.to(dtype=X.dtype).reshape(-1)
+        y = y.to(dtype=X.dtype, device=X.device).reshape(-1)
         if int(X.shape[0]) < int(self.n_neighbors):
             raise ValueError(
                 f"n_neighbors ({self.n_neighbors}) must be <= n_samples "

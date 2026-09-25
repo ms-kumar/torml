@@ -25,16 +25,19 @@ Devices
 -------
 
 - CUDA inputs stay on CUDA through ``fit``/``predict``/``transform`` — no
-  host round-trips, no device-mismatch errors.
-- CPU remains the tested path: the suite runs on CPU, and CUDA coverage is
-  a ``requires CUDA``-gated round-trip test (see
-  ``tests/common/test_dtype_device.py``).
+  host round-trips, no device-mismatch errors. Random generators are created
+  on the data device, and class tables live next to the data they index.
+- Apple Silicon (MPS) is supported the same way and is exercised by gated
+  tests wherever MPS exists (``tests/common/test_dtype_device.py``).
+- CPU remains the fully tested path: the suite runs on CPU, and CUDA/MPS
+  coverage is ``requires CUDA``/``requires MPS``-gated.
 
 .. code-block:: python
 
-   X = torch.randn(40, 3, device="cuda")
+   X = torch.randn(40, 3, device="cuda")   # or "mps"
    StandardScaler().fit_transform(X).device.type   # 'cuda'
 
-Caveat: on Apple Silicon, some ``torch.linalg`` ops used internally
-(``lstsq``, ``svd``, ``cholesky``) have limited MPS support — CPU is the
-supported backend there.
+Caveat: on Apple Silicon, a few ``torch.linalg`` ops historically lagged on
+MPS — if you hit ``NotImplementedError`` from inside ``torch.linalg``, move
+that step to CPU. Majority votes use a gather-based implementation instead
+of ``torch.mode`` for exactly this reason.

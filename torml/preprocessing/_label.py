@@ -88,7 +88,9 @@ class LabelEncoder(BaseEstimator):
             if key not in self._class_to_index:
                 raise ValueError(f"Unknown label {v!r} seen in transform.")
             out.append(self._class_to_index[key])
-        return torch.tensor(out, dtype=torch.long)
+        device = y.device if isinstance(y, torch.Tensor) else None
+        kwargs = {"device": device} if device is not None else {}
+        return torch.tensor(out, dtype=torch.long, **kwargs)
 
     def fit_transform(self, y):
         """Fit and encode ``y``.
@@ -137,5 +139,7 @@ class LabelEncoder(BaseEstimator):
                 )
             decoded.append(self._classes_list[ii])
         if isinstance(self.classes_, torch.Tensor):
-            return torch.as_tensor(decoded, dtype=self.classes_.dtype)
+            device = y.device if isinstance(y, torch.Tensor) else None
+            kwargs = {"device": device} if device is not None else {}
+            return torch.as_tensor(decoded, dtype=self.classes_.dtype, **kwargs)
         return decoded

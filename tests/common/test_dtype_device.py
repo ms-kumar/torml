@@ -14,6 +14,9 @@ from torml.tree import DecisionTreeClassifier
 from torml.utils import check_array
 
 cuda_only = pytest.mark.skipif(not torch.cuda.is_available(), reason="requires CUDA")
+mps_only = pytest.mark.skipif(
+    not torch.backends.mps.is_available(), reason="requires MPS"
+)
 
 
 class TestCheckArrayDtype:
@@ -134,3 +137,50 @@ class TestDevice:
             KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type
             == "cuda"
         )
+
+
+class TestMPS:
+    """Tests for Apple Silicon propagation (run where MPS exists)."""
+
+    @mps_only
+    def test_estimators_stay_on_mps(self):
+        """Test core estimators stay on MPS end to end."""
+        from torml.ensemble import RandomForestClassifier
+        from torml.mixture import GaussianMixture
+        from torml.svm import LinearSVC
+
+        torch.manual_seed(0)
+        X = torch.randn(40, 3, device="mps")
+        y = (X[:, 0] > 0).long()
+        yr = X[:, 0] * 2 - X[:, 1]
+        assert StandardScaler().fit_transform(X).device.type == "mps"
+        assert LinearRegression().fit(X, yr).predict(X).device.type == "mps"
+        assert KNeighborsClassifier(3).fit(X, y).predict(X).device.type == "mps"
+        assert DecisionTreeClassifier().fit(X, y).predict(X).device.type == "mps"
+        assert (
+            KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type
+            == "mps"
+        )
+        assert (
+            GaussianMixture(n_components=2, random_state=0)
+            .fit(X)
+            .predict(X)
+            .device.type
+            == "mps"
+        )
+        assert LinearSVC(random_state=0).fit(X, y).predict(X).device.type == "mps"
+        assert (
+            RandomForestClassifier(n_estimators=2, random_state=0)
+            .fit(X, y)
+            .predict(X)
+            .device.type
+            == "mps"
+        )
+
+    @mps_only
+    def test_mps_label_tables(self):
+        """Test class tables work with on-device indices."""
+        from torml.preprocessing import LabelEncoder
+
+        y = torch.tensor([0, 1, 0], device="mps")
+        assert LabelEncoder().fit_transform(y).device.type == "mps"

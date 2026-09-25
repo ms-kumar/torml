@@ -105,33 +105,41 @@ class RandomState:
         raise TypeError("seed must be an integer, Generator or None")
 
 
-def check_random_state(seed: int | None) -> torch.Generator:
+def check_random_state(seed: int | None, device=None) -> torch.Generator:
     """Check and convert seed into torch.Generator (or None for random seed).
 
     Parameters
     ----------
     seed : int, torch.Generator or None
-        Seed value or pre-created generator.
+        Seed value or pre-created generator. A passed-in generator is
+        returned unchanged (it must already live on ``device``).
+    device : torch.device or str or None, default=None
+        Device for a newly created generator. CUDA/MPS generators are
+        required to sample tensors on those devices.
 
     Returns
     -------
     generator : torch.Generator
-        PyTorch random number generator, or default if seed is None.
+        PyTorch random number generator on ``device`` (CPU default).
 
     Raises
     ------
     TypeError
-        If seed is neither None nor an integer.
+        If seed is neither None, an integer, nor a generator.
     """
     if seed is None:
-        return torch.Generator()
+        return (
+            torch.Generator(device=device) if device is not None else torch.Generator()
+        )
 
     if isinstance(seed, torch.Generator):
         return seed
 
-    if not isinstance(seed, int):
+    if isinstance(seed, bool) or not isinstance(seed, int):
         raise TypeError("An integer is required")
 
-    generator = torch.Generator()
+    generator = (
+        torch.Generator(device=device) if device is not None else torch.Generator()
+    )
     generator.manual_seed(seed)
     return generator

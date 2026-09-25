@@ -87,7 +87,8 @@ class LinearSVC(ClassifierMixin):
         # pylint: disable=too-many-locals
         alpha = _validate_C(self.C)
         max_iter = _validate_rate("max_iter", self.max_iter)
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         X, y = check_X_y(X, y)
         flat = y.reshape(-1)
         classes, inverse = torch.unique(flat, sorted=True, return_inverse=True)
@@ -96,7 +97,7 @@ class LinearSVC(ClassifierMixin):
                 "LinearSVC supports binary labels only, "
                 f"got {int(classes.shape[0])} classes."
             )
-        self.classes_ = classes
+        self.classes_ = classes.to(device=X.device)
         signed = torch.where(
             inverse == 1,
             torch.tensor(1.0, dtype=X.dtype, device=X.device),
@@ -231,7 +232,8 @@ class LinearSVR(RegressorMixin):
             )
         if float(self.epsilon) < 0:
             raise ValueError(f"epsilon must be >= 0, got {self.epsilon}.")
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         X, y = check_X_y(X, y)
         target = y.to(dtype=X.dtype, device=X.device).reshape(-1)
         n_samples, n_features = int(X.shape[0]), int(X.shape[1])

@@ -73,7 +73,7 @@ class OneVsRestClassifier(ClassifierMixin):
         numeric = all(
             isinstance(v, (int, float)) and not isinstance(v, bool) for v in uniq
         )
-        self.classes_ = torch.as_tensor(uniq) if numeric else uniq
+        self.classes_ = torch.as_tensor(uniq, device=Xt.device) if numeric else uniq
         self.estimators_ = []
         for c in uniq:
             cond = torch.as_tensor([v == c for v in flat.tolist()], device=Xt.device)

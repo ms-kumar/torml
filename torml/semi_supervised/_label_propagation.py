@@ -86,7 +86,7 @@ class LabelPropagation(ClassifierMixin):
             uniq = sorted(set(labeled))
         except TypeError as e:
             raise TypeError("Labels must be sortable.") from e
-        self.classes_ = torch.as_tensor(uniq)
+        self.classes_ = torch.as_tensor(uniq, device=Xt.device)
         n_classes = len(uniq)
         pos = {c: i for i, c in enumerate(uniq)}
 

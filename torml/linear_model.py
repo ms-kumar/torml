@@ -88,7 +88,7 @@ class LinearRegression(RegressorMixin):
     def _fit(self, X: torch.Tensor, y: torch.Tensor):
         """Fit linear model with linear least squares."""
         X, y = check_X_y(X, y)
-        y = y.to(dtype=X.dtype).reshape(-1, 1)
+        y = y.to(dtype=X.dtype, device=X.device).reshape(-1, 1)
         self.n_features_in_ = X.shape[1]
 
         if self.fit_intercept:
@@ -268,8 +268,8 @@ class LogisticRegression(ClassifierMixin):
                 "LogisticRegression supports binary labels only, "
                 f"got {int(classes.shape[0])} classes."
             )
-        self.classes_ = classes
-        target = inverse.to(dtype=X.dtype)
+        self.classes_ = classes.to(device=X.device)
+        target = inverse.to(dtype=X.dtype, device=X.device)
         n_samples, n_features = int(X.shape[0]), int(X.shape[1])
         self.n_features_in_ = n_features
         lam = 1.0 / (n_samples * float(self.C))
