@@ -13,6 +13,7 @@ from torml.base import (
     is_classifier,
     is_regressor,
 )
+from torml.utils import NotFittedError, check_is_fitted
 
 
 class DummyClassifier(ClassifierMixin):
@@ -52,6 +53,14 @@ class DummyRegressor(RegressorMixin):
         raise NotImplementedError
 
 
+class _FitDummy(BaseEstimator):
+    """Minimal working estimator: fit records features and returns self."""
+
+    def fit(self, X, y=None):
+        self.n_features_in_ = int(torch.as_tensor(X).shape[1])
+        return self
+
+
 @pytest.fixture
 def dummy_classifier():
     return DummyClassifier()
@@ -75,12 +84,6 @@ def y():
 class TestBaseEstimator:
     """Tests for BaseEstimator."""
 
-    @pytest.fixture
-    def fitted_estimator(self):
-        """Fixed fixture that properly instantiates a DummyClassifier instance."""
-        estimator = DummyClassifier()
-        return estimator
-
     def test_init_hyperparam_names(self):
         """Test that hyperparam names are stored but not learned attributes."""
         estimator = DummyClassifier()
@@ -93,14 +96,16 @@ class TestBaseEstimator:
         assert "tol" in dir(estimator)
         assert "warm_start" in dir(estimator)
 
-    # SKIP: This test requires checking set_params validation
-    # def test_set_params_raises(self, fitted_estimator):
-    #     """Test set Params raises for unknown keys."""
-    #     unknown_estimator = fitted_estimator
-    #     unknown_estimator.set_params(unknown_key="value")
+    def test_set_params_raises(self, dummy_classifier):
+        """Test set_params raises ValueError for unknown keys."""
+        with pytest.raises(ValueError, match="unknown_key"):
+            dummy_classifier.set_params(unknown_key="value")
 
-    #     with pytest.raises(ValueError):
-    #         unknown_estimator.set_params(unknown_key="not a key")
+    def test_set_params_round_trip(self, dummy_classifier):
+        """Test set_params returns self and stores values."""
+        out = dummy_classifier.set_params(criterion="gini")
+        assert out is dummy_classifier
+        assert dummy_classifier.criterion == "gini"
 
     def test_repr(self, dummy_classifier):
         """Test repr doesn't raise."""
@@ -108,24 +113,20 @@ class TestBaseEstimator:
         assert rep_str is not None
         assert "DummyClassifier" in rep_str
 
-    # SKIP: _validate_params not implemented in DummyClassifier
-    # def test_not_fitted_raises(self, dummy_classifier):
-    #     """Test not_fitted methods raise NotFittedError."""
-    #     with pytest.raises(NotFittedError):
-    #         dummy_classifier._validate_params()
-    #     with pytest.raises(NotFittedError):
-    #         dummy_classifier.score(torch.randn(10, 5))
+    def test_not_fitted_raises(self, dummy_classifier):
+        """Test check_is_fitted raises NotFittedError before fit."""
+        with pytest.raises(NotFittedError):
+            check_is_fitted(dummy_classifier)
 
-    # SKIP: DummyClassifier doesn't implement fit()
-    # def test_fit_returns_self(self, dummy_classifier, X, y):
-    #     """Test fit returns self."""
-    #     assert isinstance(dummy_classifier.fit(X, y), type(dummy_classifier))
+    def test_fit_returns_self(self, X, y):
+        """Test fit returns self."""
+        est = _FitDummy()
+        assert est.fit(X, y) is est
 
-    # SKIP: n_features_in_ not defined in DummyClassifier
-    # def test_n_features_in_set(self, X):
-    #     """Test n_features_in_ attribute is set."""
-    #     n_features_in_ = DummyClassifier(n_features_in_="test").n_features_in_
-    #     assert n_features_in_ == torch.tensor(4)
+    def test_n_features_in_set(self, X, y):
+        """Test n_features_in_ is set by fit."""
+        est = _FitDummy().fit(X, y)
+        assert est.n_features_in_ == 5
 
     def test_is_classifier(self, dummy_classifier):
         """Test is_classifier returns True."""
