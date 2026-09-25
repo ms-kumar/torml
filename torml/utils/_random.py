@@ -13,118 +13,96 @@ class RandomState:
 
     Parameters
     ----------
-    seed : int or None
-        If set (not None), seed used to initialize the generator.
-    random_state : torch.Generator or int or None
-        If not None, use this seed or generator state.
+    seed : int, torch.Generator or None, default=None
+        Seed value, pre-created generator, or None for an unseeded
+        generator.
 
     Attributes
     ----------
     gen : torch.Generator
         PyTorch random number generator.
-    seed : None or int
-        Stored seed value (None if fresh instance).
+    seed : int or None
+        Stored seed value (None when unseeded or wrapping a generator).
     """
 
-    def __init__(self, seed=None, random_state: torch.Generator | int | None = None):
-        if random_state is None:
-            self.gen = torch.manual_seed(432)  # default seed
-            self.seed = 432
-        elif isinstance(random_state, int):
-            # Convert to torch generator using seed
+    def __init__(self, seed: torch.Generator | int | None = None):
+        if seed is None:
             self.gen = torch.Generator()
-            self.seed = random_state
-            torch.manual_seed(seed)
+            self.seed = None
+        elif isinstance(seed, torch.Generator):
+            self.gen = seed
+            self.seed = None
+        elif isinstance(seed, int) and not isinstance(seed, bool):
+            self.gen = torch.Generator()
+            self.gen.manual_seed(seed)
+            self.seed = seed
         else:
-            raise TypeError("random_state should be None or an integer")
-
-        self.gen = random_state if isinstance(random_state, int) else random_state
+            raise TypeError(
+                "seed must be an int, torch.Generator or None, "
+                f"got {type(seed).__name__}."
+            )
 
     def __call__(self):
         """Get the random state."""
         return self.gen
 
     def __repr__(self) -> str:
-        if self.seed is None:
-            initial = self.gen.initial_seed()
-            return f"<RandomState, seed={torch.initial_seed() + initial}>"
         return f"<RandomState, seed={self.seed}>"
-
-    def __setattr__(self, key, value):
-        attr = key[8:]  # Remove 'RandomState_' prefix if present
-        super().__setattr__(attr, value)
 
     def __getstate__(self):
         return {"seed": self.seed}
 
     def __setstate__(self, state):
-        self.__init__(state.pop("seed"))
+        self.__init__(state["seed"])
 
     def reset(self, seed=None):
-        """Reset random state.
+        """Reset to a fresh generator, optionally reseeded.
 
         Parameters
         ----------
-        seed : int
-            The seed value to start from.
+        seed : int or None, default=None
+            New seed value.
         """
-        if seed is not None and not isinstance(seed, int):
-            raise TypeError("The seed must be an integer")
-
-        self.seed = seed
+        if seed is not None and (not isinstance(seed, int) or isinstance(seed, bool)):
+            raise TypeError("The seed must be an integer or None")
         self.gen = torch.Generator()
+        self.seed = seed
         if seed is not None:
-            torch.manual_seed(seed)
-        self._manual_seed = True
-        self.gen.manual_seed(seed)
-
-    def _set_state(self, seed):
-        self._manual_seed = False
-        if seed is None:
-            raise AssertionError("Cannot set a None seed state.")
-        if isinstance(seed, int):
-            self._seed = seed
-
-        self._update_state(seed)
-
-    def _update_state(self, seed):
-        self._seed = seed
-        if hasattr(self, "_manual_seed"):
-            self._manual_seed = True
-        self.gen._state[1] = self._seed & 0xFFFFFF
-        initial_num_seed = self.gen.initial_state[0]
-        self.gen._state[2] = self._seed + initial_num_seed
+            self.gen.manual_seed(seed)
 
     def __reduce__(self):
         return (self.__class__, (self.seed,))
 
     def __copy__(self):
-        new_rng = self.__class__(self.seed)
-        return new_rng
+        return self.__class__(self.seed)
 
     def __deepcopy__(self, memo):
         new_rng = self.__class__(self.seed)
         memo[id(self)] = new_rng
         return new_rng
 
-    def check_seed(self, seed: any):
+    def check_seed(self, seed):
         """Check for valid seed argument.
 
         Parameters
         ----------
-        seed : int or None or random_state
+        seed : int, torch.Generator, RandomState or None
             Argument to check.
+
+        Returns
+        -------
+        seed : valid seed argument, unchanged.
 
         Raises
         ------
-        ValueError
-            If seed is not None, and not an integer.
+        TypeError
+            If seed is none of the accepted types.
         """
-        # torch.Generator is not a subclass of int
-        if seed is not None and not isinstance(seed, (int, type(self))):
-            raise TypeError("seed must be an integer or None")
-
-        return seed
+        if seed is None or isinstance(seed, (int, torch.Generator, RandomState)):
+            if isinstance(seed, bool):
+                raise TypeError("seed must be an integer, Generator or None")
+            return seed
+        raise TypeError("seed must be an integer, Generator or None")
 
 
 def check_random_state(seed: int | None) -> torch.Generator:
