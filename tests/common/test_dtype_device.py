@@ -13,9 +13,7 @@ from torml.preprocessing import StandardScaler
 from torml.tree import DecisionTreeClassifier
 from torml.utils import check_array
 
-cuda_only = pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="requires CUDA"
-)
+cuda_only = pytest.mark.skipif(not torch.cuda.is_available(), reason="requires CUDA")
 
 
 class TestCheckArrayDtype:
@@ -117,7 +115,10 @@ class TestDevice:
         y = (X[:, 0] > 0).long()
         assert StandardScaler().fit_transform(X).device.type == "cpu"
         assert LinearRegression().fit(X, y.float()).predict(X).device.type == "cpu"
-        assert KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type == "cpu"
+        assert (
+            KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type
+            == "cpu"
+        )
 
     @cuda_only
     def test_cuda_round_trip(self):
@@ -129,4 +130,7 @@ class TestDevice:
         assert StandardScaler().fit_transform(X).device.type == "cuda"
         assert LinearRegression().fit(X, yr).predict(X).device.type == "cuda"
         assert KNeighborsClassifier(3).fit(X, y).predict(X).device.type == "cuda"
-        assert KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type == "cuda"
+        assert (
+            KMeans(n_clusters=2, random_state=0, n_init=2).fit(X).labels_.device.type
+            == "cuda"
+        )
