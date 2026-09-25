@@ -74,8 +74,9 @@ class KNeighborsClassifier(ClassifierMixin):
             )
         flat_y = y.reshape(-1)
         self.classes_, inverse = torch.unique(flat_y, sorted=True, return_inverse=True)
+        self.classes_ = self.classes_.to(device=X.device)
         self.X_ = X
-        self.y_ = inverse.to(dtype=torch.long)
+        self.y_ = inverse.to(dtype=torch.long, device=X.device)
         self.n_features_in_ = int(X.shape[1])
         self.n_samples_in_ = int(X.shape[0])
         return self

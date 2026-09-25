@@ -103,7 +103,7 @@ def f_classif(X, y):
     """
     Xt, yt = check_X_y(X, y)
     Xt = Xt.to(dtype=Xt.dtype)
-    flat = yt.reshape(-1)
+    flat = yt.reshape(-1).to(Xt.device)
     classes = torch.unique(flat, sorted=True)
     n = int(Xt.shape[0])
     n_classes = int(classes.shape[0])

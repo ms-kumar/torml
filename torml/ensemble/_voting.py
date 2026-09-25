@@ -7,6 +7,33 @@ import torch
 from torml.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 
 
+def _majority_vote(cols: torch.Tensor) -> torch.Tensor:
+    """Row-wise majority vote (smallest index wins ties, like mode).
+
+    Parameters
+    ----------
+    cols : torch.Tensor of shape (n_voters, n_queries)
+        Integer class indices per voter.
+
+    Returns
+    -------
+    winners : torch.Tensor of shape (n_queries,)
+        Winning class index per query.
+    """
+    counts = torch.zeros(
+        int(cols.shape[1]),
+        int(cols.max()) + 1,
+        dtype=torch.float32,
+        device=cols.device,
+    )
+    counts.scatter_add_(
+        1,
+        cols.T,
+        torch.ones_like(cols.T, dtype=torch.float32),
+    )
+    return torch.argmax(counts, dim=1)
+
+
 def _validate_estimators(estimators) -> list:
     """Validate the ``estimators`` list of (name, estimator) pairs."""
     if not isinstance(estimators, (list, tuple)) or len(estimators) == 0:
@@ -130,7 +157,9 @@ class VotingClassifier(ClassifierMixin):
         numeric = all(
             isinstance(v, (int, float)) and not isinstance(v, bool) for v in uniq
         )
-        self.classes_ = torch.as_tensor(uniq) if numeric else uniq
+        device = X.device if isinstance(X, torch.Tensor) else None
+        kwargs = {"device": device} if device is not None else {}
+        self.classes_ = torch.as_tensor(uniq, **kwargs) if numeric else uniq
         self.estimators_ = [(name, clone(est).fit(X, y)) for name, est in members]
         first = self.estimators_[0][1]
         if hasattr(first, "n_features_in_"):
@@ -232,7 +261,7 @@ class VotingClassifier(ClassifierMixin):
                         device=device,
                     )
                 )
-            idx = torch.mode(torch.stack(cols), dim=0).values
+            idx = _majority_vote(torch.stack(cols))
         if isinstance(self.classes_, torch.Tensor):
             return self.classes_[idx]
         return [self.classes_[int(i)] for i in idx.tolist()]

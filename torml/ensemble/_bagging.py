@@ -5,6 +5,7 @@ from __future__ import annotations
 import torch
 
 from torml.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
+from torml.ensemble._voting import _majority_vote
 from torml.utils._random import check_random_state
 from torml.utils._validation import check_is_fitted
 
@@ -44,7 +45,8 @@ class _BaseBagging(BaseEstimator):
             )
         if int(self.n_estimators) < 1:
             raise ValueError(f"n_estimators must be >= 1, got {self.n_estimators}.")
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         Xt = torch.as_tensor(X) if not isinstance(X, torch.Tensor) else X
         n_samples = int(Xt.shape[0])
         k = _resolve_n_samples(self.max_samples, n_samples)
@@ -131,7 +133,7 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
         members, _ = self._fit_members(X, y, bool(self.bootstrap))
         Xt = torch.as_tensor(X) if not isinstance(X, torch.Tensor) else X
         yt = torch.as_tensor(y) if not isinstance(y, torch.Tensor) else y
-        flat = yt.reshape(-1)
+        flat = yt.reshape(-1).to(Xt.device)
         try:
             uniq = sorted(set(flat.tolist()))
         except TypeError as e:
@@ -139,7 +141,7 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
         numeric = all(
             isinstance(v, (int, float)) and not isinstance(v, bool) for v in uniq
         )
-        self.classes_ = torch.as_tensor(uniq) if numeric else uniq
+        self.classes_ = torch.as_tensor(uniq, device=Xt.device) if numeric else uniq
         self.estimators_ = [clone(base).fit(Xt[idx], flat[idx]) for _, idx in members]
         self.n_features_in_ = int(Xt.shape[1]) if Xt.ndim == 2 else 0
         return self
@@ -219,7 +221,7 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
                     device=device,
                 )
             )
-        idx = torch.mode(torch.stack(cols), dim=0).values
+            idx = _majority_vote(torch.stack(cols))
         if isinstance(self.classes_, torch.Tensor):
             return self.classes_[idx]
         return [self.classes_[int(i)] for i in idx.tolist()]
@@ -296,7 +298,7 @@ class BaggingRegressor(RegressorMixin, _BaseBagging):
             if not isinstance(y, torch.Tensor)
             else y.to(dtype=_dtype)
         )
-        flat = yt.reshape(-1)
+        flat = yt.reshape(-1).to(Xt.device)
         self.estimators_ = [clone(base).fit(Xt[idx], flat[idx]) for _, idx in members]
         self.n_features_in_ = int(Xt.shape[1]) if Xt.ndim == 2 else 0
         return self

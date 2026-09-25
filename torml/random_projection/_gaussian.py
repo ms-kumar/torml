@@ -81,7 +81,8 @@ class GaussianRandomProjection(TransformerMixin):
         self : GaussianRandomProjection
             Fitted projector.
         """
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         Xt = check_array(X, ensure_2d=True)
         n_samples, n_features = int(Xt.shape[0]), int(Xt.shape[1])
         self.n_features_in_ = n_features

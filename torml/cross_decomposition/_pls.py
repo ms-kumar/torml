@@ -67,8 +67,8 @@ class PLSRegression(RegressorMixin):
             raise ValueError(f"n_components must be >= 1, got {self.n_components}.")
         X, y = check_X_y(X, y)
         _dtype = X.dtype
-        X = X.to(dtype=_dtype)
-        target = y.to(dtype=_dtype).reshape(-1)
+        X = X.to(dtype=_dtype, device=X.device)
+        target = y.to(dtype=_dtype, device=X.device).reshape(-1)
         n, d = int(X.shape[0]), int(X.shape[1])
         k = min(int(self.n_components), d)
         self.n_features_in_ = d

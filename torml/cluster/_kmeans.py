@@ -96,7 +96,8 @@ class KMeans(ClusterMixin):
             Fitted clusterer.
         """
         self._validate_hyperparams()
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         Xt = check_array(X, ensure_2d=True)
         n_samples = int(Xt.shape[0])
         if n_samples < int(self.n_clusters):

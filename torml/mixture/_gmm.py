@@ -97,7 +97,8 @@ class GaussianMixture(ClusterMixin):
             )
         if int(self.max_iter) < 1:
             raise ValueError(f"max_iter must be >= 1, got {self.max_iter}.")
-        generator = check_random_state(self.random_state)
+        device = X.device if isinstance(X, torch.Tensor) else None
+        generator = check_random_state(self.random_state, device)
         Xt = check_array(X, ensure_2d=True)
         n, d = int(Xt.shape[0]), int(Xt.shape[1])
         if n < int(self.n_components):
