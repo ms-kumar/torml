@@ -68,7 +68,7 @@ class GaussianNB(ClassifierMixin):
             Fitted classifier.
         """
         vs = self._validate_smoothing()
-        X = check_array(X, ensure_2d=True, dtype=torch.float32)
+        X = check_array(X, ensure_2d=True)
         if isinstance(y, torch.Tensor):
             flat = y.reshape(-1)
             n_y = int(flat.shape[0])
@@ -94,7 +94,8 @@ class GaussianNB(ClassifierMixin):
             self.classes_, inverse = torch.unique(
                 labels, sorted=True, return_inverse=True
             )
-            inverse = inverse.to(dtype=torch.long)
+            self.classes_ = self.classes_.to(device=X.device)
+            inverse = inverse.to(dtype=torch.long, device=X.device)
         else:
             try:
                 uniq = sorted(set(labels))
@@ -102,7 +103,9 @@ class GaussianNB(ClassifierMixin):
                 raise TypeError("Labels must be sortable.") from e
             self.classes_ = uniq
             mapping = {c: i for i, c in enumerate(uniq)}
-            inverse = torch.tensor([mapping[v] for v in labels], dtype=torch.long)
+            inverse = torch.tensor(
+                [mapping[v] for v in labels], dtype=torch.long, device=X.device
+            )
         n_classes = (
             len(self.classes_)
             if isinstance(self.classes_, list)
@@ -113,11 +116,11 @@ class GaussianNB(ClassifierMixin):
         self.n_samples_in_ = int(X.shape[0])
 
         self.class_count_ = torch.bincount(inverse, minlength=n_classes).to(
-            dtype=torch.float32
+            dtype=X.dtype
         )
         self.class_prior_ = self.class_count_ / self.class_count_.sum()
-        self.theta_ = torch.empty(n_classes, n_features, dtype=torch.float32)
-        self.var_ = torch.empty(n_classes, n_features, dtype=torch.float32)
+        self.theta_ = torch.empty(n_classes, n_features, dtype=X.dtype, device=X.device)
+        self.var_ = torch.empty(n_classes, n_features, dtype=X.dtype, device=X.device)
         for c in range(n_classes):
             X_c = X[inverse == c]
             self.theta_[c] = X_c.mean(dim=0)
@@ -130,7 +133,7 @@ class GaussianNB(ClassifierMixin):
     def _joint_log_likelihood(self, X: torch.Tensor) -> torch.Tensor:
         """Compute unnormalized log posteriors for ``X``."""
         check_is_fitted(self, attributes=["theta_", "var_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but GaussianNB was "

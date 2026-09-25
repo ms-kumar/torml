@@ -65,8 +65,7 @@ class KNeighborsRegressor(RegressorMixin):
         p = _validate_p(self.p)
         self._p = p
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
-        y = y.to(dtype=torch.float32).reshape(-1)
+        y = y.to(dtype=X.dtype).reshape(-1)
         if int(X.shape[0]) < int(self.n_neighbors):
             raise ValueError(
                 f"n_neighbors ({self.n_neighbors}) must be <= n_samples "
@@ -98,7 +97,7 @@ class KNeighborsRegressor(RegressorMixin):
             Indices into the training set.
         """
         check_is_fitted(self, attributes=["X_", "y_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but "
@@ -135,13 +134,15 @@ class KNeighborsRegressor(RegressorMixin):
             return neighbor_vals.mean(dim=1)
         exact = dist == 0
         has_exact = exact.any(dim=1)
-        out = torch.empty(int(ind.shape[0]), dtype=torch.float32)
+        out = torch.empty(
+            int(ind.shape[0]), dtype=neighbor_vals.dtype, device=neighbor_vals.device
+        )
         if bool(has_exact.any()):
             for i in torch.where(has_exact)[0].tolist():
                 out[i] = neighbor_vals[i][exact[i]].mean()
         rest = (~has_exact).nonzero().reshape(-1).tolist()
         if rest:
-            r_idx = torch.tensor(rest, dtype=torch.long)
+            r_idx = torch.tensor(rest, dtype=torch.long, device=neighbor_vals.device)
             w = distance_weights(dist[r_idx])
             out[r_idx] = (neighbor_vals[r_idx] * w).sum(dim=1) / w.sum(dim=1)
         return out

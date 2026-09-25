@@ -62,7 +62,7 @@ class MDS(BaseEstimator):
                 "dissimilarity must be 'euclidean' or 'precomputed', "
                 f"got {self.dissimilarity!r}."
             )
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n_samples = int(Xt.shape[0])
         if int(self.n_components) > n_samples:
             raise ValueError(

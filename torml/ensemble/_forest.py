@@ -76,7 +76,9 @@ class RandomForestClassifier(ClassifierMixin):
         self.classes_ = torch.as_tensor(uniq) if numeric else uniq
         self.estimators_ = []
         for _ in range(int(self.n_estimators)):
-            idx = torch.randint(n_samples, (n_samples,), generator=generator)
+            idx = torch.randint(
+                n_samples, (n_samples,), generator=generator, device=Xt.device
+            )
             tree = DecisionTreeClassifier(max_depth=self.max_depth)
             self.estimators_.append(tree.fit(Xt[idx], flat[idx]))
         self.n_features_in_ = int(Xt.shape[1]) if Xt.ndim == 2 else 0
@@ -103,6 +105,11 @@ class RandomForestClassifier(ClassifierMixin):
         )
         pos = {c: i for i, c in enumerate(own)}
         cols = []
+        device = (
+            self.classes_.device
+            if isinstance(self.classes_, torch.Tensor)
+            else (X.device if isinstance(X, torch.Tensor) else None)
+        )
         for est in self.estimators_:
             pred = est.predict(X)
             vals = pred.tolist() if isinstance(pred, torch.Tensor) else list(pred)
@@ -110,6 +117,7 @@ class RandomForestClassifier(ClassifierMixin):
                 torch.tensor(
                     [pos[v.item() if isinstance(v, torch.Tensor) else v] for v in vals],
                     dtype=torch.long,
+                    device=device,
                 )
             )
         idx = torch.mode(torch.stack(cols), dim=0).values
@@ -169,16 +177,19 @@ class RandomForestRegressor(RegressorMixin):
             raise ValueError(f"n_estimators must be >= 1, got {self.n_estimators}.")
         generator = check_random_state(self.random_state)
         Xt = torch.as_tensor(X) if not isinstance(X, torch.Tensor) else X
+        _dtype = Xt.dtype if Xt.is_floating_point() else torch.float32
         yt = (
-            torch.as_tensor(y, dtype=torch.float32)
+            torch.as_tensor(y, dtype=_dtype)
             if not isinstance(y, torch.Tensor)
-            else y.to(dtype=torch.float32)
+            else y.to(dtype=_dtype)
         )
         flat = yt.reshape(-1)
         n_samples = int(Xt.shape[0])
         self.estimators_ = []
         for _ in range(int(self.n_estimators)):
-            idx = torch.randint(n_samples, (n_samples,), generator=generator)
+            idx = torch.randint(
+                n_samples, (n_samples,), generator=generator, device=Xt.device
+            )
             tree = DecisionTreeRegressor(max_depth=self.max_depth)
             self.estimators_.append(tree.fit(Xt[idx], flat[idx]))
         self.n_features_in_ = int(Xt.shape[1]) if Xt.ndim == 2 else 0
@@ -199,10 +210,7 @@ class RandomForestRegressor(RegressorMixin):
         """
         check_is_fitted(self, attributes=["estimators_"])
         stacked = torch.stack(
-            [
-                torch.as_tensor(est.predict(X), dtype=torch.float32)
-                for est in self.estimators_
-            ]
+            [torch.as_tensor(est.predict(X)) for est in self.estimators_]
         )
         return stacked.mean(dim=0)
 

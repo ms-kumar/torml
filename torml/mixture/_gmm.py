@@ -52,7 +52,7 @@ class GaussianMixture(ClusterMixin):
     def _estimate_log_gaussian(self, X):
         """Log density of each sample under each component."""
         n, d = int(X.shape[0]), int(X.shape[1])
-        out = torch.empty(n, self._k, dtype=torch.float32)
+        out = torch.empty(n, self._k, dtype=X.dtype, device=X.device)
         for c in range(self._k):
             diff = X - self.means_[c]
             try:
@@ -98,7 +98,7 @@ class GaussianMixture(ClusterMixin):
         if int(self.max_iter) < 1:
             raise ValueError(f"max_iter must be >= 1, got {self.max_iter}.")
         generator = check_random_state(self.random_state)
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n, d = int(Xt.shape[0]), int(Xt.shape[1])
         if n < int(self.n_components):
             raise ValueError(
@@ -107,7 +107,12 @@ class GaussianMixture(ClusterMixin):
         self._k = int(self.n_components)
         self.n_features_in_ = d
 
-        resp = torch.rand(n, self._k, generator=generator) + 1e-6
+        resp = (
+            torch.rand(
+                n, self._k, generator=generator, dtype=Xt.dtype, device=Xt.device
+            )
+            + 1e-6
+        )
         resp = resp / resp.sum(dim=1, keepdim=True)
         prev_ll: float | None = None
         self.converged_ = False
@@ -115,11 +120,13 @@ class GaussianMixture(ClusterMixin):
             nk = resp.sum(dim=0) + 1e-10
             self.weights_ = nk / n
             self.means_ = (resp.T @ Xt) / nk.unsqueeze(1)
-            covs = torch.empty(self._k, d, d, dtype=torch.float32)
+            covs = torch.empty(self._k, d, d, dtype=Xt.dtype, device=Xt.device)
             for c in range(self._k):
                 diff = Xt - self.means_[c]
                 covs[c] = (diff * resp[:, c].unsqueeze(1)).T @ diff / nk[c]
-                covs[c] = covs[c] + 1e-6 * torch.eye(d)
+                covs[c] = covs[c] + 1e-6 * torch.eye(
+                    d, dtype=Xt.dtype, device=Xt.device
+                )
             self.covariances_ = covs
             log_resp = self._estimate_log_gaussian(Xt) + torch.log(
                 self.weights_
@@ -147,7 +154,7 @@ class GaussianMixture(ClusterMixin):
             Responsibilities.
         """
         check_is_fitted(self, attributes=["weights_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the mixture was "
@@ -206,7 +213,7 @@ class GaussianMixture(ClusterMixin):
             Mean log likelihood.
         """
         check_is_fitted(self, attributes=["weights_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         log_resp = self._estimate_log_gaussian(Xt) + torch.log(self.weights_).unsqueeze(
             0
         )

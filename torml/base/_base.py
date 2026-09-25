@@ -186,7 +186,6 @@ class BaseEstimator:
 
         return check_array(
             X,
-            dtype=torch.float32,
             ensure_2d=True,
             allow_nd=False,
             copy=True,
@@ -204,7 +203,6 @@ class BaseEstimator:
 
         return check_array(
             y,
-            dtype=torch.float32,
             ensure_2d=False,
             allow_nd=False,
             copy=True,

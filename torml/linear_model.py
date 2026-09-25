@@ -88,8 +88,7 @@ class LinearRegression(RegressorMixin):
     def _fit(self, X: torch.Tensor, y: torch.Tensor):
         """Fit linear model with linear least squares."""
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
-        y = y.to(dtype=torch.float32).reshape(-1, 1)
+        y = y.to(dtype=X.dtype).reshape(-1, 1)
         self.n_features_in_ = X.shape[1]
 
         if self.fit_intercept:
@@ -125,7 +124,7 @@ class LinearRegression(RegressorMixin):
         check_is_fitted(self, attributes=["coef_", "intercept_"])
         from torml.utils._validation import check_array
 
-        X = check_array(X, ensure_2d=True, dtype=torch.float32)
+        X = check_array(X, ensure_2d=True)
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
                 f"X has {X.shape[1]} features, but {type(self).__name__} "
@@ -262,7 +261,6 @@ class LogisticRegression(ClassifierMixin):
         if int(self.max_iter) < 1:
             raise ValueError(f"max_iter must be >= 1, got {self.max_iter}.")
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         flat = y.reshape(-1)
         classes, inverse = torch.unique(flat, sorted=True, return_inverse=True)
         if int(classes.shape[0]) != 2:
@@ -271,12 +269,12 @@ class LogisticRegression(ClassifierMixin):
                 f"got {int(classes.shape[0])} classes."
             )
         self.classes_ = classes
-        target = inverse.to(dtype=torch.float32)
+        target = inverse.to(dtype=X.dtype)
         n_samples, n_features = int(X.shape[0]), int(X.shape[1])
         self.n_features_in_ = n_features
         lam = 1.0 / (n_samples * float(self.C))
-        w = torch.zeros(n_features, dtype=torch.float32)
-        b = torch.tensor(0.0)
+        w = torch.zeros(n_features, dtype=X.dtype, device=X.device)
+        b = torch.tensor(0.0, dtype=X.dtype, device=X.device)
         for _ in range(int(self.max_iter)):
             logits = X @ w + b
             prob = torch.sigmoid(logits)
@@ -304,7 +302,7 @@ class LogisticRegression(ClassifierMixin):
         check_is_fitted(self, attributes=["coef_", "intercept_"])
         from torml.utils._validation import check_array
 
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but LogisticRegression "

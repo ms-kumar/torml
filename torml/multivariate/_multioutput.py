@@ -82,8 +82,8 @@ class MultiOutputRegressor(RegressorMixin):
                 "estimator must be a BaseEstimator, "
                 f"got {type(self.estimator).__name__}."
             )
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
-        Yt = _validate_2d_y(y, "y").to(dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
+        Yt = _validate_2d_y(y, "y").to(dtype=Xt.dtype)
         if int(Xt.shape[0]) != int(Yt.shape[0]):
             raise ValueError(
                 f"X and y have inconsistent lengths: {int(Xt.shape[0])} "
@@ -110,10 +110,9 @@ class MultiOutputRegressor(RegressorMixin):
             Predictions per output.
         """
         check_is_fitted(self, attributes=["estimators_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         cols = [
-            torch.as_tensor(est.predict(Xt), dtype=torch.float32).reshape(-1)
-            for est in self.estimators_
+            torch.as_tensor(est.predict(Xt)).reshape(-1) for est in self.estimators_
         ]
         stacked = torch.stack(cols, dim=1)
         return stacked.squeeze(1) if stacked.shape[1] == 1 else stacked
@@ -186,7 +185,7 @@ class MultiOutputClassifier(ClassifierMixin):
                 "estimator must be a BaseEstimator, "
                 f"got {type(self.estimator).__name__}."
             )
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         Yt = _validate_2d_y(y, "y")
         if int(Xt.shape[0]) != int(Yt.shape[0]):
             raise ValueError(
@@ -217,7 +216,7 @@ class MultiOutputClassifier(ClassifierMixin):
             Predicted labels per output.
         """
         check_is_fitted(self, attributes=["estimators_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         cols = []
         for est in self.estimators_:
             pred = est.predict(Xt)

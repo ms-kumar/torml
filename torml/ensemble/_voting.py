@@ -161,7 +161,8 @@ class VotingClassifier(ClassifierMixin):
         pos = {c: i for i, c in enumerate(other)}
         for c in own:
             index.append(pos[c])
-        return proba[:, torch.tensor(index, dtype=torch.long)]
+        device = proba.device if isinstance(proba, torch.Tensor) else None
+        return proba[:, torch.tensor(index, dtype=torch.long, device=device)]
 
     def predict_proba(self, X):
         """Average member probabilities.
@@ -213,6 +214,11 @@ class VotingClassifier(ClassifierMixin):
             )
             pos = {c: i for i, c in enumerate(own)}
             cols = []
+            device = (
+                self.classes_.device
+                if isinstance(self.classes_, torch.Tensor)
+                else (X.device if isinstance(X, torch.Tensor) else None)
+            )
             for _, est in self.estimators_:
                 pred = est.predict(X)
                 vals = pred.tolist() if isinstance(pred, torch.Tensor) else list(pred)
@@ -223,6 +229,7 @@ class VotingClassifier(ClassifierMixin):
                             for v in vals
                         ],
                         dtype=torch.long,
+                        device=device,
                     )
                 )
             idx = torch.mode(torch.stack(cols), dim=0).values
@@ -324,9 +331,6 @@ class VotingRegressor(RegressorMixin):
 
         check_is_fitted(self, attributes=["estimators_"])
         stacked = torch.stack(
-            [
-                torch.as_tensor(est.predict(X), dtype=torch.float32)
-                for _, est in self.estimators_
-            ]
+            [torch.as_tensor(est.predict(X)) for _, est in self.estimators_]
         )
         return stacked.mean(dim=0)

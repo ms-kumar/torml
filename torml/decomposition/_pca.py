@@ -78,7 +78,7 @@ class PCA(TransformerMixin):
         self : PCA
             Fitted transformer.
         """
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n_samples, n_features = int(Xt.shape[0]), int(Xt.shape[1])
         if n_samples < 2:
             raise ValueError(f"Need at least 2 samples, got {n_samples}.")
@@ -127,7 +127,7 @@ class PCA(TransformerMixin):
             Projected data.
         """
         check_is_fitted(self, attributes=["components_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but PCA was fitted "
@@ -152,7 +152,7 @@ class PCA(TransformerMixin):
             Approximate reconstruction.
         """
         check_is_fitted(self, attributes=["components_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32, ensure_min_features=1)
+        Xt = check_array(X, ensure_2d=True, ensure_min_features=1)
         if int(Xt.shape[1]) != int(self.components_.shape[0]):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} components, but PCA has "

@@ -111,7 +111,10 @@ class DictVectorizer(TransformerMixin):
             Nonzero entries per row.
         """
         check_is_fitted(self, attributes=["vocabulary_"])
-        Xt = torch.as_tensor(X, dtype=torch.float32)
+        if isinstance(X, torch.Tensor) and X.is_floating_point():
+            Xt = torch.as_tensor(X)
+        else:
+            Xt = torch.as_tensor(X, dtype=torch.float32)
         if int(Xt.shape[1]) != len(self.feature_names_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} columns, but the vocabulary has "

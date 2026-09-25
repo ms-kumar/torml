@@ -51,9 +51,13 @@ class _BaseBagging(BaseEstimator):
         members = []
         for _ in range(int(self.n_estimators)):
             if bootstrap:
-                idx = torch.randint(n_samples, (k,), generator=generator)
+                idx = torch.randint(
+                    n_samples, (k,), generator=generator, device=Xt.device
+                )
             else:
-                idx = torch.randperm(n_samples, generator=generator)[:k]
+                idx = torch.randperm(n_samples, generator=generator, device=Xt.device)[
+                    :k
+                ]
             members.append((Xt, idx))
         return members, generator
 
@@ -168,7 +172,14 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
                 if isinstance(est.classes_, torch.Tensor)
                 else list(est.classes_)
             )
-            aligned = proba[:, torch.tensor([pos[c] for c in other], dtype=torch.long)]
+            aligned = proba[
+                :,
+                torch.tensor(
+                    [pos[c] for c in other],
+                    dtype=torch.long,
+                    device=proba.device if isinstance(proba, torch.Tensor) else None,
+                ),
+            ]
             total = aligned if total is None else total + aligned
         return total / len(self.estimators_)
 
@@ -193,6 +204,11 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
         )
         pos = {c: i for i, c in enumerate(own)}
         cols = []
+        device = (
+            self.classes_.device
+            if isinstance(self.classes_, torch.Tensor)
+            else (X.device if isinstance(X, torch.Tensor) else None)
+        )
         for est in self.estimators_:
             pred = est.predict(X)
             vals = pred.tolist() if isinstance(pred, torch.Tensor) else list(pred)
@@ -200,6 +216,7 @@ class BaggingClassifier(ClassifierMixin, _BaseBagging):
                 torch.tensor(
                     [pos[v.item() if isinstance(v, torch.Tensor) else v] for v in vals],
                     dtype=torch.long,
+                    device=device,
                 )
             )
         idx = torch.mode(torch.stack(cols), dim=0).values
@@ -273,10 +290,11 @@ class BaggingRegressor(RegressorMixin, _BaseBagging):
         base = self._base()
         members, _ = self._fit_members(X, y, bool(self.bootstrap))
         Xt = torch.as_tensor(X) if not isinstance(X, torch.Tensor) else X
+        _dtype = Xt.dtype if Xt.is_floating_point() else torch.float32
         yt = (
-            torch.as_tensor(y, dtype=torch.float32)
+            torch.as_tensor(y, dtype=_dtype)
             if not isinstance(y, torch.Tensor)
-            else y.to(dtype=torch.float32)
+            else y.to(dtype=_dtype)
         )
         flat = yt.reshape(-1)
         self.estimators_ = [clone(base).fit(Xt[idx], flat[idx]) for _, idx in members]
@@ -298,9 +316,6 @@ class BaggingRegressor(RegressorMixin, _BaseBagging):
         """
         check_is_fitted(self, attributes=["estimators_"])
         stacked = torch.stack(
-            [
-                torch.as_tensor(est.predict(X), dtype=torch.float32)
-                for est in self.estimators_
-            ]
+            [torch.as_tensor(est.predict(X)) for est in self.estimators_]
         )
         return stacked.mean(dim=0)

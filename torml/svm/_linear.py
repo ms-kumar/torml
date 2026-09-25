@@ -89,7 +89,6 @@ class LinearSVC(ClassifierMixin):
         max_iter = _validate_rate("max_iter", self.max_iter)
         generator = check_random_state(self.random_state)
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         flat = y.reshape(-1)
         classes, inverse = torch.unique(flat, sorted=True, return_inverse=True)
         if int(classes.shape[0]) != 2:
@@ -98,16 +97,24 @@ class LinearSVC(ClassifierMixin):
                 f"got {int(classes.shape[0])} classes."
             )
         self.classes_ = classes
-        signed = torch.where(inverse == 1, 1.0, -1.0)
+        signed = torch.where(
+            inverse == 1,
+            torch.tensor(1.0, dtype=X.dtype, device=X.device),
+            torch.tensor(-1.0, dtype=X.dtype, device=X.device),
+        )
         n_samples, n_features = int(X.shape[0]), int(X.shape[1])
         self.n_features_in_ = n_features
         lam = 1.0 / (n_samples * alpha)
-        w = torch.zeros(n_features, dtype=torch.float32)
-        b = torch.tensor(0.0)
+        w = torch.zeros(n_features, dtype=X.dtype, device=X.device)
+        b = torch.tensor(0.0, dtype=X.dtype, device=X.device)
         prev_obj: float | None = None
         n_iter = 0
         for t in range(1, max_iter + 1):
-            i = int(torch.randint(n_samples, (1,), generator=generator).item())
+            i = int(
+                torch.randint(
+                    n_samples, (1,), generator=generator, device=X.device
+                ).item()
+            )
             eta = 1.0 / (lam * t)
             margin = signed[i] * (torch.dot(w, X[i]) + b)
             w = (1.0 - eta * lam) * w
@@ -142,7 +149,7 @@ class LinearSVC(ClassifierMixin):
             Positive values predict ``classes_[1]``.
         """
         check_is_fitted(self, attributes=["coef_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but LinearSVC was fitted "
@@ -226,15 +233,18 @@ class LinearSVR(RegressorMixin):
             raise ValueError(f"epsilon must be >= 0, got {self.epsilon}.")
         generator = check_random_state(self.random_state)
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
-        target = y.to(dtype=torch.float32).reshape(-1)
+        target = y.to(dtype=X.dtype, device=X.device).reshape(-1)
         n_samples, n_features = int(X.shape[0]), int(X.shape[1])
         self.n_features_in_ = n_features
         lam = 1.0 / (n_samples * alpha)
-        w = torch.zeros(n_features, dtype=torch.float32)
-        b = torch.tensor(0.0)
+        w = torch.zeros(n_features, dtype=X.dtype, device=X.device)
+        b = torch.tensor(0.0, dtype=X.dtype, device=X.device)
         for t in range(1, max_iter + 1):
-            i = int(torch.randint(n_samples, (1,), generator=generator).item())
+            i = int(
+                torch.randint(
+                    n_samples, (1,), generator=generator, device=X.device
+                ).item()
+            )
             eta = 1.0 / (lam * t)
             residual = torch.dot(w, X[i]) + b - target[i]
             w = (1.0 - eta * lam) * w
@@ -263,7 +273,7 @@ class LinearSVR(RegressorMixin):
             Predicted values.
         """
         check_is_fitted(self, attributes=["coef_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but LinearSVR was fitted "

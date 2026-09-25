@@ -28,7 +28,6 @@ def safe_mask(X: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     mask = torch.as_tensor(mask, device=X.device)
     mask = check_array(
         mask,
-        dtype=torch.float32,
         ensure_2d=False,
         allow_nd=False,
         copy=False,
@@ -73,6 +72,6 @@ def indices_to_mask(indices: torch.Tensor, n_samples: int):
     idx = torch.as_tensor(indices, dtype=torch.long).reshape(-1)
     if idx.numel() > 0 and (bool((idx < 0).any()) or bool((idx >= n_samples).any())):
         raise ValueError("indices contains out-of-bounds entries.")
-    mask = torch.zeros((n_samples,), dtype=torch.uint8)
+    mask = torch.zeros((n_samples,), dtype=torch.uint8, device=idx.device)
     mask[idx] = 1
     return mask

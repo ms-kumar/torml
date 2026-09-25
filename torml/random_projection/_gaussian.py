@@ -82,7 +82,7 @@ class GaussianRandomProjection(TransformerMixin):
             Fitted projector.
         """
         generator = check_random_state(self.random_state)
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n_samples, n_features = int(Xt.shape[0]), int(Xt.shape[1])
         self.n_features_in_ = n_features
         nc = self.n_components
@@ -100,7 +100,7 @@ class GaussianRandomProjection(TransformerMixin):
             k = int(nc)
         self.n_components_ = k
         self.components_ = torch.randn(
-            n_features, k, generator=generator, dtype=torch.float32
+            n_features, k, generator=generator, dtype=Xt.dtype, device=Xt.device
         ) / math.sqrt(k)
         return self
 
@@ -118,7 +118,7 @@ class GaussianRandomProjection(TransformerMixin):
             Projected data.
         """
         check_is_fitted(self, attributes=["components_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the projector was "
@@ -143,7 +143,7 @@ class GaussianRandomProjection(TransformerMixin):
             Approximate reconstruction.
         """
         check_is_fitted(self, attributes=["components_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_components_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} components, but the projector has "

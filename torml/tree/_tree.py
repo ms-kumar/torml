@@ -27,7 +27,7 @@ def _best_split_classifier(X, y_idx, n_classes, criterion):
     # pylint: disable=too-many-locals
     n, n_features = int(X.shape[0]), int(X.shape[1])
     impurity_fn = _gini if criterion == "gini" else _entropy
-    total_counts = torch.bincount(y_idx, minlength=n_classes).to(dtype=torch.float32)
+    total_counts = torch.bincount(y_idx, minlength=n_classes).to(dtype=X.dtype)
     parent = impurity_fn(total_counts)
     best = (0.0, -1, 0.0)
     for f in range(n_features):
@@ -37,10 +37,10 @@ def _best_split_classifier(X, y_idx, n_classes, criterion):
         valid = sorted_x[:-1] != sorted_x[1:]
         if not bool(valid.any()):
             continue
-        one_hot = torch.zeros(n, n_classes, dtype=torch.float32)
-        one_hot[torch.arange(n), y_idx[order]] = 1.0
+        one_hot = torch.zeros(n, n_classes, dtype=X.dtype, device=X.device)
+        one_hot[torch.arange(n, device=X.device), y_idx[order]] = 1.0
         left_counts = torch.cumsum(one_hot, dim=0)[:-1]
-        left_n = torch.arange(1, n, dtype=torch.float32)
+        left_n = torch.arange(1, n, dtype=X.dtype, device=X.device)
         right_counts = total_counts - left_counts
         right_n = float(n) - left_n
         gain = (
@@ -70,7 +70,7 @@ def _best_split_regressor(X, y):
         valid = sorted_x[:-1] != sorted_x[1:]
         if not bool(valid.any()):
             continue
-        left_n = torch.arange(1, n, dtype=torch.float32)
+        left_n = torch.arange(1, n, dtype=X.dtype, device=X.device)
         right_n = float(n) - left_n
         left_s = torch.cumsum(sorted_y, dim=0)[:-1]
         left_s2 = torch.cumsum(sorted_y * sorted_y, dim=0)[:-1]
@@ -177,7 +177,6 @@ class DecisionTreeClassifier(
         from torml.utils._validation import check_X_y as _check_X_y
 
         X, y = _check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         flat = y.reshape(-1)
         labels = flat.tolist()
         try:
@@ -192,7 +191,9 @@ class DecisionTreeClassifier(
             else uniq
         )
         index_of = {c: i for i, c in enumerate(uniq)}
-        y_idx = torch.tensor([index_of[v] for v in labels], dtype=torch.long)
+        y_idx = torch.tensor(
+            [index_of[v] for v in labels], dtype=torch.long, device=X.device
+        )
         n_classes = len(uniq)
         self.n_features_in_ = int(X.shape[1])
         self._left, self._right, self._feature = [], [], []
@@ -202,15 +203,17 @@ class DecisionTreeClassifier(
             [],
             [],
         )
-        self._importance = torch.zeros(self.n_features_in_, dtype=torch.float32)
+        self._importance = torch.zeros(
+            self.n_features_in_, dtype=X.dtype, device=X.device
+        )
 
         max_depth = float("inf") if self.max_depth is None else int(self.max_depth)
-        stack = [(0, torch.arange(int(X.shape[0])), 0)]
+        stack = [(0, torch.arange(int(X.shape[0]), device=X.device), 0)]
         self._new_node(0.0, int(X.shape[0]), None)
         while stack:
             node, idx, depth = stack.pop()
             node_y = y_idx[idx]
-            counts = torch.bincount(node_y, minlength=n_classes).to(dtype=torch.float32)
+            counts = torch.bincount(node_y, minlength=n_classes).to(dtype=X.dtype)
             imp = _gini(counts) if self.criterion == "gini" else _entropy(counts)
             self._impurity[node] = float(imp.item())
             self._values[node] = counts
@@ -269,13 +272,18 @@ class DecisionTreeClassifier(
             Per-class probabilities.
         """
         check_is_fitted(self, attributes=["_left"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the tree was fitted "
                 f"with {int(self.n_features_in_)} features."
             )
-        out = torch.empty(int(Xt.shape[0]), len(self._values[0]), dtype=torch.float32)
+        out = torch.empty(
+            int(Xt.shape[0]),
+            len(self._values[0]),
+            dtype=Xt.dtype,
+            device=Xt.device,
+        )
         for i in range(int(Xt.shape[0])):
             counts = self._values[self._predict_idx(Xt[i])]
             out[i] = counts / counts.sum().clamp(min=1)
@@ -350,8 +358,7 @@ class DecisionTreeRegressor(
         from torml.utils._validation import check_X_y as _check_X_y
 
         X, y = _check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
-        target = y.to(dtype=torch.float32).reshape(-1)
+        target = y.to(dtype=X.dtype).reshape(-1)
         self.n_features_in_ = int(X.shape[1])
         self._left, self._right, self._feature = [], [], []
         self._threshold, self._impurity, self._n_node_samples, self._values = (
@@ -360,10 +367,12 @@ class DecisionTreeRegressor(
             [],
             [],
         )
-        self._importance = torch.zeros(self.n_features_in_, dtype=torch.float32)
+        self._importance = torch.zeros(
+            self.n_features_in_, dtype=X.dtype, device=X.device
+        )
 
         max_depth = float("inf") if self.max_depth is None else int(self.max_depth)
-        stack = [(0, torch.arange(int(X.shape[0])), 0)]
+        stack = [(0, torch.arange(int(X.shape[0]), device=X.device), 0)]
         self._new_node(0.0, int(X.shape[0]), 0.0)
         while stack:
             node, idx, depth = stack.pop()
@@ -410,13 +419,13 @@ class DecisionTreeRegressor(
             Predicted values.
         """
         check_is_fitted(self, attributes=["_left"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the tree was fitted "
                 f"with {int(self.n_features_in_)} features."
             )
-        out = torch.empty(int(Xt.shape[0]), dtype=torch.float32)
+        out = torch.empty(int(Xt.shape[0]), dtype=Xt.dtype, device=Xt.device)
         for i in range(int(Xt.shape[0])):
             node = 0
             row = Xt[i]

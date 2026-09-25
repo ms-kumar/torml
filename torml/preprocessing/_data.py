@@ -62,7 +62,7 @@ class StandardScaler(TransformerMixin):
             raise TypeError(
                 f"with_std must be a bool, got {type(self.with_std).__name__}."
             )
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         self.n_features_in_ = int(Xt.shape[1])
         self.n_samples_seen_ = int(Xt.shape[0])
         if self.with_mean:
@@ -99,7 +99,7 @@ class StandardScaler(TransformerMixin):
             Transformed data.
         """
         check_is_fitted(self, attributes=["mean_", "scale_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but StandardScaler was "
@@ -129,7 +129,7 @@ class StandardScaler(TransformerMixin):
             Data in the original space.
         """
         check_is_fitted(self, attributes=["mean_", "scale_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but StandardScaler was "
@@ -205,7 +205,7 @@ class MinMaxScaler(TransformerMixin):
             Fitted scaler.
         """
         lo, hi = self._validate_range()
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         self.n_features_in_ = int(Xt.shape[1])
         self.n_samples_seen_ = int(Xt.shape[0])
         self.data_min_ = Xt.min(dim=0).values
@@ -233,7 +233,7 @@ class MinMaxScaler(TransformerMixin):
             Transformed data.
         """
         check_is_fitted(self, attributes=["scale_", "min_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but MinMaxScaler was "
@@ -258,7 +258,7 @@ class MinMaxScaler(TransformerMixin):
             Data in the original space.
         """
         check_is_fitted(self, attributes=["scale_", "min_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but MinMaxScaler was "

@@ -66,7 +66,7 @@ class LabelPropagation(ClassifierMixin):
             )
         if int(self.n_neighbors) < 1:
             raise ValueError(f"n_neighbors must be >= 1, got {self.n_neighbors}.")
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         flat = (
             torch.as_tensor(y).reshape(-1)
             if not isinstance(y, torch.Tensor)
@@ -94,14 +94,14 @@ class LabelPropagation(ClassifierMixin):
         dist.fill_diagonal_(float("inf"))
         k = min(int(self.n_neighbors), n - 1)
         knn = torch.topk(dist, k=k, dim=1, largest=False).indices
-        weight = torch.zeros(n, n, dtype=torch.float32)
+        weight = torch.zeros(n, n, dtype=Xt.dtype, device=Xt.device)
         sigma = float(torch.median(dist[dist < float("inf")])) + 1e-12
         for i in range(n):
             weight[i, knn[i]] = torch.exp(-dist[i, knn[i]] ** 2 / (2 * sigma**2))
         weight = torch.maximum(weight, weight.T)
         weight = weight / weight.sum(dim=1, keepdim=True).clamp(min=1e-12)
 
-        Y = torch.zeros(n, n_classes, dtype=torch.float32)
+        Y = torch.zeros(n, n_classes, dtype=Xt.dtype, device=Xt.device)
         for i in torch.where(labeled_mask)[0].tolist():
             v = flat[i].item()
             Y[i, pos[v]] = 1.0
@@ -134,7 +134,7 @@ class LabelPropagation(ClassifierMixin):
             Propagated labels.
         """
         check_is_fitted(self, attributes=["transduction_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[0]) != int(self.transduction_.shape[0]):
             raise ValueError(
                 "LabelPropagation is transductive: predict on the fitted X."
@@ -155,7 +155,7 @@ class LabelPropagation(ClassifierMixin):
             Soft assignments.
         """
         check_is_fitted(self, attributes=["label_distributions_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[0]) != int(self.label_distributions_.shape[0]):
             raise ValueError(
                 "LabelPropagation is transductive: predict on the fitted X."

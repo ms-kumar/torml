@@ -45,7 +45,7 @@ class EmpiricalCovariance(BaseEstimator):
         self : EmpiricalCovariance
             Fitted estimator.
         """
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         self.location_ = Xt.mean(dim=0)
         centered = Xt - self.location_
         self.covariance_ = (centered.T @ centered) / int(Xt.shape[0])
@@ -69,7 +69,7 @@ class EmpiricalCovariance(BaseEstimator):
             Squared distances.
         """
         check_is_fitted(self, attributes=["precision_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the estimator was "
@@ -94,10 +94,16 @@ class EmpiricalCovariance(BaseEstimator):
             Mean log likelihood.
         """
         check_is_fitted(self, attributes=["precision_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         d = int(Xt.shape[1])
-        sign, log_det = torch.slogdet(self.covariance_ + 1e-12 * torch.eye(d))
+        sign, log_det = torch.slogdet(
+            self.covariance_
+            + 1e-12
+            * torch.eye(d, dtype=self.covariance_.dtype, device=self.covariance_.device)
+        )
         if int(sign.item()) <= 0:
-            log_det = torch.tensor(float("-inf"))
+            log_det = torch.tensor(
+                float("-inf"), dtype=log_det.dtype, device=log_det.device
+            )
         ll = -0.5 * (d * math.log(2.0 * math.pi) + log_det + self.mahalanobis(Xt))
         return float(ll.mean())

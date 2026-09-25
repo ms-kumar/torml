@@ -18,6 +18,7 @@ Start with :doc:`quickstart`, learn the patterns in
    user_guide/unsupervised
    user_guide/preprocessing
    user_guide/model_selection
+   user_guide/dtypes_devices
    user_guide/comparison
    api
 

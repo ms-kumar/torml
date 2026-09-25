@@ -76,10 +76,11 @@ class OneVsRestClassifier(ClassifierMixin):
         self.classes_ = torch.as_tensor(uniq) if numeric else uniq
         self.estimators_ = []
         for c in uniq:
+            cond = torch.as_tensor([v == c for v in flat.tolist()], device=Xt.device)
             binary = torch.where(
-                torch.as_tensor([v == c for v in flat.tolist()]),
-                torch.tensor(1),
-                torch.tensor(0),
+                cond,
+                torch.tensor(1, device=Xt.device),
+                torch.tensor(0, device=Xt.device),
             )
             self.estimators_.append(clone(self.estimator).fit(X, binary))
         first = self.estimators_[0]
@@ -107,11 +108,9 @@ class OneVsRestClassifier(ClassifierMixin):
         cols = []
         for est in self.estimators_:
             if hasattr(est, "decision_function"):
-                s = torch.as_tensor(
-                    est.decision_function(X), dtype=torch.float32
-                ).reshape(-1)
+                s = torch.as_tensor(est.decision_function(X)).reshape(-1)
             elif hasattr(est, "predict_proba"):
-                s = torch.as_tensor(est.predict_proba(X), dtype=torch.float32)[:, 1]
+                s = torch.as_tensor(est.predict_proba(X))[:, 1]
             else:
                 raise AttributeError("Members need decision_function or predict_proba.")
             cols.append(s)
