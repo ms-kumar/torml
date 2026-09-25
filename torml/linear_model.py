@@ -16,7 +16,7 @@ class LinearRegression(RegressorMixin):
 
     Linear regression fits a linear model using least squares.
 
-    Read more in the :ref:`User Guide <linear_model>`.
+    See the user guide for background on linear models.
 
     Parameters
     ----------

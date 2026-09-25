@@ -20,6 +20,7 @@ extensions = [
 
 autosummary_generate = True
 napoleon_numpy_docstring = True
+numpydoc_class_members_toctree = False
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
