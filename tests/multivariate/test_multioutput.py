@@ -49,3 +49,16 @@ class TestMultiOutputClassifier:
         pred = MultiOutputClassifier(DecisionTreeClassifier()).fit(X, Y).predict(X)
         assert tuple(pred.shape) == (40, 2)
         assert float((pred == Y).float().mean()) > 0.9
+
+
+class TestNestedParams:
+    def test_estimator_prefix_round_trip(self):
+        """Test estimator__param get/set round-trip."""
+        reg = MultiOutputRegressor(LinearRegression())
+        assert reg.get_params()["estimator__fit_intercept"] is True
+        reg.set_params(estimator__fit_intercept=False)
+        assert reg.get_params()["estimator__fit_intercept"] is False
+        clf = MultiOutputClassifier(DecisionTreeClassifier())
+        assert clf.get_params()["estimator__criterion"] == "gini"
+        clf.set_params(estimator__max_depth=2)
+        assert clf.get_params()["estimator__max_depth"] == 2
