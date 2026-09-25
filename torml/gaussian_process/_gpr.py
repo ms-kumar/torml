@@ -71,13 +71,12 @@ class GaussianProcessRegressor(RegressorMixin):
         if float(self.alpha) < 0:
             raise ValueError(f"alpha must be >= 0, got {self.alpha}.")
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         self.X_train_ = X
-        self.y_train_ = y.to(dtype=torch.float32).reshape(-1)
+        self.y_train_ = y.to(dtype=X.dtype, device=X.device).reshape(-1)
         self.n_features_in_ = int(X.shape[1])
         noise = float(self.alpha) + 1e-10
         base = self._rbf(X, X)
-        eye = torch.eye(int(X.shape[0]))
+        eye = torch.eye(int(X.shape[0]), dtype=X.dtype, device=X.device)
         jitter = noise
         for _ in range(5):
             try:
@@ -112,7 +111,7 @@ class GaussianProcessRegressor(RegressorMixin):
             Posterior standard deviations.
         """
         check_is_fitted(self, attributes=["L_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but the process was "

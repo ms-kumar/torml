@@ -97,7 +97,7 @@ class KMeans(ClusterMixin):
         """
         self._validate_hyperparams()
         generator = check_random_state(self.random_state)
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n_samples = int(Xt.shape[0])
         if n_samples < int(self.n_clusters):
             raise ValueError(
@@ -107,9 +107,9 @@ class KMeans(ClusterMixin):
 
         best_inertia: float | None = None
         for _ in range(int(self.n_init)):
-            perm = torch.randperm(n_samples, generator=generator)
+            perm = torch.randperm(n_samples, generator=generator, device=Xt.device)
             centers = Xt[perm[: int(self.n_clusters)]].clone()
-            assign = torch.zeros(n_samples, dtype=torch.long)
+            assign = torch.zeros(n_samples, dtype=torch.long, device=Xt.device)
             n_iter = 0
             for n_iter in range(1, int(self.max_iter) + 1):
                 dist = torch.cdist(Xt, centers, p=2)
@@ -148,7 +148,7 @@ class KMeans(ClusterMixin):
             Closest-center indices.
         """
         check_is_fitted(self, attributes=["cluster_centers_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but KMeans was fitted "

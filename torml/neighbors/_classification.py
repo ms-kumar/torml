@@ -67,7 +67,6 @@ class KNeighborsClassifier(ClassifierMixin):
         p = _validate_p(self.p)
         self._p = p
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         if int(X.shape[0]) < int(self.n_neighbors):
             raise ValueError(
                 f"n_neighbors ({self.n_neighbors}) must be <= n_samples "
@@ -101,7 +100,7 @@ class KNeighborsClassifier(ClassifierMixin):
             Indices into the training set.
         """
         check_is_fitted(self, attributes=["X_", "y_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but "
@@ -137,29 +136,33 @@ class KNeighborsClassifier(ClassifierMixin):
         n_queries = int(ind.shape[0])
         n_classes = int(self.classes_.shape[0])
         if self.weights == "uniform":
-            counts = torch.zeros(n_queries, n_classes, dtype=torch.float32)
+            counts = torch.zeros(
+                n_queries, n_classes, dtype=dist.dtype, device=dist.device
+            )
             counts.scatter_add_(
                 1,
                 neighbor_labels,
-                torch.ones_like(neighbor_labels, dtype=torch.float32),
+                torch.ones_like(neighbor_labels, dtype=dist.dtype),
             )
             return counts / float(self.n_neighbors)
         weights = distance_weights(dist)
         exact = dist == 0
         has_exact = exact.any(dim=1)
-        proba = torch.zeros(n_queries, n_classes, dtype=torch.float32)
+        proba = torch.zeros(n_queries, n_classes, dtype=dist.dtype, device=dist.device)
         if bool(has_exact.any()):
             for i in torch.where(has_exact)[0].tolist():
                 exact_labels = neighbor_labels[i][exact[i]]
                 counts = torch.bincount(exact_labels, minlength=n_classes).to(
-                    dtype=torch.float32
+                    dtype=dist.dtype
                 )
                 proba[i] = counts / counts.sum()
         rest = (~has_exact).nonzero().reshape(-1).tolist()
         if rest:
-            r_idx = torch.tensor(rest, dtype=torch.long)
+            r_idx = torch.tensor(rest, dtype=torch.long, device=dist.device)
             w = weights[r_idx]
-            weighted = torch.zeros(len(rest), n_classes, dtype=torch.float32)
+            weighted = torch.zeros(
+                len(rest), n_classes, dtype=dist.dtype, device=dist.device
+            )
             weighted.scatter_add_(1, neighbor_labels[r_idx], w)
             proba[r_idx] = weighted / w.sum(dim=1, keepdim=True)
         return proba

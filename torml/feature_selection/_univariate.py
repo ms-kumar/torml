@@ -73,8 +73,8 @@ def _f_pvalue(score: float, df_between: int, df_within: int) -> float:
 def _group_scatter(Xt, flat, classes, overall):
     """Between/within sum of squares per feature for class groups."""
     d = int(Xt.shape[1])
-    ss_between = torch.zeros(d)
-    ss_within = torch.zeros(d)
+    ss_between = torch.zeros(d, dtype=Xt.dtype, device=Xt.device)
+    ss_within = torch.zeros(d, dtype=Xt.dtype, device=Xt.device)
     for c in classes.tolist():
         group = Xt[flat == c]
         n_c = int(group.shape[0])
@@ -102,7 +102,7 @@ def f_classif(X, y):
         Survival probabilities under the F distribution.
     """
     Xt, yt = check_X_y(X, y)
-    Xt = Xt.to(dtype=torch.float32)
+    Xt = Xt.to(dtype=Xt.dtype)
     flat = yt.reshape(-1)
     classes = torch.unique(flat, sorted=True)
     n = int(Xt.shape[0])
@@ -124,7 +124,8 @@ def f_classif(X, y):
         # P(X > x) for F(df_between, df_within) via the incomplete beta.
         pvalues = torch.tensor(
             [_f_pvalue(float(s), df_between, df_within) for s in scores.tolist()],
-            dtype=torch.float32,
+            dtype=Xt.dtype,
+            device=Xt.device,
         )
     return scores, pvalues
 
@@ -188,8 +189,8 @@ class SelectKBest(TransformerMixin):
         else:
             k = int(self.k)
         scores, pvalues = self.score_func(Xt, yt)
-        scores = torch.as_tensor(scores, dtype=torch.float32).reshape(-1)
-        pvalues = torch.as_tensor(pvalues, dtype=torch.float32).reshape(-1)
+        scores = torch.as_tensor(scores, dtype=Xt.dtype, device=Xt.device).reshape(-1)
+        pvalues = torch.as_tensor(pvalues, dtype=Xt.dtype, device=Xt.device).reshape(-1)
         if int(scores.shape[0]) != n_features:
             raise ValueError("score_func returned wrong number of scores.")
         self.scores_ = scores
@@ -197,7 +198,7 @@ class SelectKBest(TransformerMixin):
         order = torch.argsort(
             torch.nan_to_num(scores, nan=float("-inf")), descending=True, stable=True
         )
-        mask = torch.zeros(n_features, dtype=torch.bool)
+        mask = torch.zeros(n_features, dtype=torch.bool, device=Xt.device)
         mask[order[:k]] = True
         self._mask = mask
         return self
@@ -233,7 +234,7 @@ class SelectKBest(TransformerMixin):
             Selected columns.
         """
         check_is_fitted(self, attributes=["_mask"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but SelectKBest was "

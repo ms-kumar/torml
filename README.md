@@ -112,15 +112,17 @@ rerun with `uv run --with scikit-learn python benchmarks/compare_sklearn.py`):
 
 | task | metric | torml | scikit-learn |
 | --- | --- | --- | --- |
-| linreg | R² | 0.999596 | 0.999596 |
-| kmeans | inertia (lower better) | 14235.3 | 14271.8 |
-| knn | accuracy | 0.9240 | 0.9240 |
+| linreg | R² | 0.999656 | 0.999656 |
+| kmeans | inertia (lower better) | 72645.4 | 72611.7 |
+| knn | accuracy | 0.9476 | 0.9476 |
 | tree | accuracy | 1.0000 | 1.0000 |
 | scaler | max \|diff\| | 4.77e-07 | reference |
 
-Correctness matches everywhere; timings are in the same class except tree
-fitting (~2x slower — Cython vs Python loops). torml's real edges are
-torch-native differentiable I/O, one runtime dependency, and exact
+Correctness matches everywhere (10k samples per task); timings are in the
+same class except tree fitting (~1.5x slower — Cython vs Python loops) and
+10k kNN prediction, where sklearn's ball tree (~0.3s) beats torml's exact
+brute force (~5s). torml's real edges are torch-native differentiable I/O
+(including CUDA + float64 propagation), one runtime dependency, and exact
 statistics. Full honest write-up (including where sklearn wins):
 [user guide comparison](doc/user_guide/comparison.rst).
 

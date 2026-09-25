@@ -66,8 +66,9 @@ class PLSRegression(RegressorMixin):
         if int(self.n_components) < 1:
             raise ValueError(f"n_components must be >= 1, got {self.n_components}.")
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
-        target = y.to(dtype=torch.float32).reshape(-1)
+        _dtype = X.dtype
+        X = X.to(dtype=_dtype)
+        target = y.to(dtype=_dtype).reshape(-1)
         n, d = int(X.shape[0]), int(X.shape[1])
         k = min(int(self.n_components), d)
         self.n_features_in_ = d
@@ -94,15 +95,15 @@ class PLSRegression(RegressorMixin):
             Xk = Xk - torch.outer(t, p)
             yk = yk - t * q
         if not weights:
-            self.x_weights_ = torch.zeros(d, 0, dtype=torch.float32)
-            self.x_scores_ = torch.zeros(n, 0, dtype=torch.float32)
-            self.coef_ = torch.zeros(d, dtype=torch.float32)
+            self.x_weights_ = torch.zeros(d, 0, dtype=X.dtype, device=X.device)
+            self.x_scores_ = torch.zeros(n, 0, dtype=X.dtype, device=X.device)
+            self.coef_ = torch.zeros(d, dtype=X.dtype, device=X.device)
             self.intercept_ = self._y_mean.reshape(1)
             self.n_components_ = 0
             return self
         W = torch.stack(weights, dim=1)
         P = torch.stack([p for p, _ in loadings], dim=1)
-        qvec = torch.tensor([q for _, q in loadings], dtype=torch.float32)
+        qvec = torch.tensor([q for _, q in loadings], dtype=X.dtype, device=X.device)
         self.x_weights_ = W
         self.x_scores_ = torch.stack(scores, dim=1)
         self.coef_ = W @ torch.linalg.solve(  # pylint: disable=not-callable
@@ -126,7 +127,7 @@ class PLSRegression(RegressorMixin):
             Predicted values.
         """
         check_is_fitted(self, attributes=["coef_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but PLSRegression was "
@@ -148,5 +149,5 @@ class PLSRegression(RegressorMixin):
             Latent scores.
         """
         check_is_fitted(self, attributes=["x_weights_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         return (Xt - self._x_mean) @ self.x_weights_

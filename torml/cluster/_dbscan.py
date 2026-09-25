@@ -78,7 +78,7 @@ class DBSCAN(ClusterMixin):
             )
         if int(self.min_samples) < 1:
             raise ValueError(f"min_samples must be >= 1, got {self.min_samples}.")
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         n_samples = int(Xt.shape[0])
         self.n_features_in_ = int(Xt.shape[1])
 
@@ -88,10 +88,12 @@ class DBSCAN(ClusterMixin):
             for i in range(n_samples)
         ]
         is_core = torch.tensor(
-            [len(nb) >= int(self.min_samples) for nb in neighborhoods], dtype=torch.bool
+            [len(nb) >= int(self.min_samples) for nb in neighborhoods],
+            dtype=torch.bool,
+            device=Xt.device,
         )
-        labels = torch.full((n_samples,), -1, dtype=torch.long)
-        visited = torch.zeros(n_samples, dtype=torch.bool)
+        labels = torch.full((n_samples,), -1, dtype=torch.long, device=Xt.device)
+        visited = torch.zeros(n_samples, dtype=torch.bool, device=Xt.device)
         cluster_id = 0
         for i in range(n_samples):
             if bool(visited[i]) or not bool(is_core[i]):
@@ -119,5 +121,5 @@ class DBSCAN(ClusterMixin):
         labels : torch.Tensor of shape (n_samples,)
             Cluster labels (-1 for noise).
         """
-        check_array(X, ensure_2d=True, dtype=torch.float32)
+        check_array(X, ensure_2d=True)
         return self.fit(X, y).labels_

@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- Added dtype/device propagation: `float32`/`float64` preserved end to end, CUDA inputs stay on CUDA; covered by `tests/common/test_dtype_device.py` (CUDA cases gated on availability).
+- Added `doc/user_guide/dtypes_devices.rst` and scaled the sklearn comparison to 10k samples per task.
 
 ### Changed
 - Changed `torml.model_selection.GridSearchCV` docs: added `examples/model_selection/plot_grid_search.py`.

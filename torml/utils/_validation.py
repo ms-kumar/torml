@@ -34,7 +34,7 @@ class NotFittedError(ValueError):
 def check_array(
     array,
     *,
-    dtype=torch.float32,
+    dtype=None,
     ensure_2d: bool = True,
     allow_nd: bool = False,
     copy: bool = False,
@@ -50,8 +50,10 @@ def check_array(
     ----------
     array : array-like of shape (n_samples, n_features) or (n_samples,)
         Data to check. Can be a torch.Tensor, numpy.ndarray, or list.
-    dtype : data-type, default=torch.float32
-        Data type for the output tensor.
+    dtype : data-type or None, default=None
+        Data type for the output tensor. None preserves floating-point
+        tensor dtypes (integer tensors are promoted to ``torch.float32``);
+        non-tensor inputs default to ``torch.float32``.
     ensure_2d : bool, default=True
         If True, X will be converted to 2D array. If False, 1D arrays are allowed.
     allow_nd : bool, default=False
@@ -81,8 +83,14 @@ def check_array(
     ValueError
         If ``array`` does not pass validation (wrong shape, contains NaN/Inf, etc.).
     """
-    # Convert to tensor
-    dtype = _normalize_dtype(dtype)
+    # Resolve dtype: preserve floating tensor dtypes, default otherwise.
+    if dtype is None:
+        if isinstance(array, torch.Tensor) and array.is_floating_point():
+            dtype = array.dtype
+        else:
+            dtype = torch.float32
+    else:
+        dtype = _normalize_dtype(dtype)
     if isinstance(array, torch.Tensor):
         tensor = array.to(dtype=dtype) if array.dtype != dtype else array
     else:

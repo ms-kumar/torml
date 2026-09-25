@@ -58,16 +58,16 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
         """
         # pylint: disable=too-many-locals
         X, y = check_X_y(X, y)
-        X = X.to(dtype=torch.float32)
         flat = y.reshape(-1)
         self.classes_, inverse = torch.unique(flat, sorted=True, return_inverse=True)
-        inverse = inverse.to(dtype=torch.long)
+        self.classes_ = self.classes_.to(device=X.device)
+        inverse = inverse.to(dtype=torch.long, device=X.device)
         n, d = int(X.shape[0]), int(X.shape[1])
         n_classes = int(self.classes_.shape[0])
         if n_classes < 2:
             raise ValueError(f"Need at least 2 classes, got {n_classes}.")
         self.n_features_in_ = d
-        counts = torch.bincount(inverse, minlength=n_classes).to(dtype=torch.float32)
+        counts = torch.bincount(inverse, minlength=n_classes).to(dtype=X.dtype)
         self.priors_ = counts / counts.sum()
         self.means_ = torch.stack(
             [X[inverse == c].mean(dim=0) for c in range(n_classes)]
@@ -80,7 +80,7 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
         V, S = Vt.T[:, :rank], singular[:rank]
         X_orth = (centered @ V) / S.clamp(min=1e-12)
         grand = X_orth.mean(dim=0)
-        between = torch.zeros(rank, rank, dtype=torch.float32)
+        between = torch.zeros(rank, rank, dtype=X.dtype, device=X.device)
         for c in range(n_classes):
             diff = X_orth[inverse == c].mean(dim=0) - grand
             between = between + counts[c] * torch.outer(diff, diff)
@@ -109,7 +109,9 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
         self.scalings_ = scalings
         total = float(evals[:max_comp].sum())
         self.explained_variance_ratio_ = (
-            evals[:k] / total if total > 0 else torch.zeros(k)
+            evals[:k] / total
+            if total > 0
+            else torch.zeros(k, dtype=X.dtype, device=X.device)
         )
         self._scalings_full = (V / S.clamp(min=1e-12)) @ evecs[:, :max_comp]
         proj_means = self.means_ @ self._scalings_full
@@ -121,7 +123,7 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
                 mid @ direction
             )
             self.coef_ = w
-            self.intercept_ = torch.tensor([b])
+            self.intercept_ = torch.tensor([b], dtype=X.dtype, device=X.device)
         else:
             coefs, intercepts = [], []
             for c in range(n_classes):
@@ -132,13 +134,13 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
                 coefs.append(w)
                 intercepts.append(b)
             self.coef_ = torch.stack(coefs, dim=1)
-            self.intercept_ = torch.tensor(intercepts)
+            self.intercept_ = torch.tensor(intercepts, dtype=X.dtype, device=X.device)
         return self
 
     def _scores(self, X):
         """Unnormalized log posteriors for ``X``."""
         check_is_fitted(self, attributes=["coef_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} features, but LDA was fitted "
@@ -201,7 +203,7 @@ class LinearDiscriminantAnalysis(ClassifierMixin, TransformerMixin):
             Projected data.
         """
         check_is_fitted(self, attributes=["scalings_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         return Xt @ self.scalings_
 
     def _transform(self, X):

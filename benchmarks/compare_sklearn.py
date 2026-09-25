@@ -36,8 +36,8 @@ def bench_linreg():
     from torml.metrics import r2_score
 
     torch.manual_seed(0)
-    features = torch.randn(5000, 20)
-    target = features @ torch.randn(20) + 0.1 * torch.randn(5000)
+    features = torch.randn(10000, 20)
+    target = features @ torch.randn(20) + 0.1 * torch.randn(10000)
     np_x, np_y = features.numpy(), target.numpy()
     tm, mine = timed(lambda: ToLin().fit(features, target))
     ts, theirs = timed(lambda: SkLin().fit(np_x, np_y))
@@ -60,7 +60,7 @@ def bench_kmeans():
     from torml.cluster import KMeans as ToKM
 
     torch.manual_seed(1)
-    data = torch.randn(2000, 10)
+    data = torch.randn(10000, 10)
     tm, mine = timed(lambda: ToKM(n_clusters=10, random_state=0, n_init=3).fit(data))
     ts, theirs = timed(
         lambda: SkKM(n_clusters=10, random_state=0, n_init=3).fit(data.numpy())
@@ -81,7 +81,7 @@ def bench_knn():
     from torml.neighbors import KNeighborsClassifier as ToKNN
 
     torch.manual_seed(2)
-    features = torch.randn(1000, 10)
+    features = torch.randn(10000, 10)
     labels = (features[:, 0] > 0).long()
     np_x, np_y = features.numpy(), labels.numpy()
     tm, mine = timed(lambda: ToKNN(5).fit(features, labels))
@@ -89,7 +89,7 @@ def bench_knn():
     print(ROW.format("knn fit", "seconds (best of 3)", f"{tm:.4f}", f"{ts:.4f}"))
     tm, my_pred = timed(lambda: mine.predict(features))
     ts, their_pred = timed(lambda: theirs.predict(np_x))
-    print(ROW.format("knn predict-1000", "seconds", f"{tm:.4f}", f"{ts:.4f}"))
+    print(ROW.format("knn predict-10k", "seconds", f"{tm:.4f}", f"{ts:.4f}"))
     print(
         ROW.format(
             "knn",
@@ -129,7 +129,7 @@ def bench_scaler():
     from torml.preprocessing import StandardScaler as ToSS
 
     torch.manual_seed(0)
-    data = torch.randn(5000, 20)
+    data = torch.randn(10000, 20)
     tm, mine = timed(lambda: ToSS().fit_transform(data))
     ts, theirs = timed(lambda: SkSS().fit_transform(data.numpy()))
     print(ROW.format("scaler", "seconds (best of 3)", f"{tm:.4f}", f"{ts:.4f}"))

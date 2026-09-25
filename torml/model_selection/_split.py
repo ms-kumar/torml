@@ -130,9 +130,11 @@ def train_test_split(
         raise ValueError("Train and test sets must each have at least 1 sample.")
 
     if shuffle:
-        perm = torch.randperm(n_samples, generator=generator)
+        _device = arrays[0].device if isinstance(arrays[0], torch.Tensor) else None
+        perm = torch.randperm(n_samples, generator=generator, device=_device)
     else:
-        perm = torch.arange(n_samples)
+        _device = arrays[0].device if isinstance(arrays[0], torch.Tensor) else None
+        perm = torch.arange(n_samples, device=_device)
     train_idx = perm[:n_train]
     test_idx = perm[n_train : n_train + n_test]
 
@@ -240,9 +242,11 @@ class KFold(BaseEstimator):
             )
 
         if self.shuffle:
-            indices = torch.randperm(n_samples, generator=generator)
+            _device = X.device if isinstance(X, torch.Tensor) else None
+            indices = torch.randperm(n_samples, generator=generator, device=_device)
         else:
-            indices = torch.arange(n_samples)
+            _device = X.device if isinstance(X, torch.Tensor) else None
+            indices = torch.arange(n_samples, device=_device)
 
         fold_sizes = [n_samples // self.n_splits] * self.n_splits
         for i in range(n_samples % self.n_splits):

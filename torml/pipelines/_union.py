@@ -177,7 +177,7 @@ class ColumnTransformer(TransformerMixin):
             Fitted transformer.
         """
         cleaned = self._validate()
-        arr = check_array(X, ensure_2d=True, dtype=torch.float32)
+        arr = check_array(X, ensure_2d=True)
         n_features = int(arr.shape[1])
         self.n_features_in_ = n_features
         fitted = []
@@ -206,7 +206,7 @@ class ColumnTransformer(TransformerMixin):
             Concatenated outputs.
         """
         check_is_fitted(self, attributes=["transformers_"])
-        arr = check_array(X, ensure_2d=True, dtype=torch.float32)
+        arr = check_array(X, ensure_2d=True)
         if int(arr.shape[1]) != int(self.n_features_in_):
             raise ValueError(
                 f"X has {int(arr.shape[1])} features, but ColumnTransformer "

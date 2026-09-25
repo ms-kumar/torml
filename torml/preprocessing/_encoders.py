@@ -166,7 +166,13 @@ class OneHotEncoder(TransformerMixin):
                 f"fitted with {int(self.n_features_in_)} features."
             )
         n_samples = len(rows)
-        out = torch.zeros(n_samples, int(self.n_features_out_), dtype=self._out_dtype)
+        input_device = X.device if isinstance(X, torch.Tensor) else None
+        out = torch.zeros(
+            n_samples,
+            int(self.n_features_out_),
+            dtype=self._out_dtype,
+            device=input_device,
+        )
         offset = 0
         for j, width in enumerate(self._widths):
             mapping = self._cat_index[j]
@@ -198,7 +204,7 @@ class OneHotEncoder(TransformerMixin):
             Decoded categorical rows.
         """
         check_is_fitted(self, attributes=["categories_"])
-        Xt = check_array(X, ensure_2d=True, dtype=torch.float32)
+        Xt = check_array(X, ensure_2d=True)
         if int(Xt.shape[1]) != int(self.n_features_out_):
             raise ValueError(
                 f"X has {int(Xt.shape[1])} columns, but OneHotEncoder output "
