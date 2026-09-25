@@ -104,18 +104,33 @@ def bench_kmeans():
     tm = None
     if MPS:
         mps_x = cpu_x.to("mps")
-        tm, mm = timed(
-            lambda: ToKM(n_clusters=10, random_state=0, n_init=2).fit(mps_x)
-        )
+        tm, mm = timed(lambda: ToKM(n_clusters=10, random_state=0, n_init=2).fit(mps_x))
         inert_m = mm.inertia_
     else:
         inert_m = float("nan")
     print(ROW.format("kmeans fit", "s best-of-3", fmt(tc), fmt(tm), fmt(ts)))
     print(
         ROW.format(
-            "kmeans", "inertia", f"{mc.inertia_:.1f}", f"{inert_m:.1f}", f"{ss.inertia_:.1f}"
+            "kmeans",
+            "inertia",
+            f"{mc.inertia_:.1f}",
+            f"{inert_m:.1f}",
+            f"{ss.inertia_:.1f}",
         )
     )
+
+
+def _bench_knn_mps(cpu_x, cpu_y, query, query_y):
+    """kNN on MPS; returns (seconds, accuracy) or (None, '-') without MPS."""
+    from torml.metrics import accuracy_score
+    from torml.neighbors import KNeighborsClassifier as ToKNN
+
+    if not MPS:
+        return None, "-"
+    mps_x, mps_y, mps_q = cpu_x.to("mps"), cpu_y.to("mps"), query.to("mps")
+    mm = ToKNN(5).fit(mps_x, mps_y)
+    tm, pm = timed(lambda: mm.predict(mps_q))
+    return tm, f"{accuracy_score(query_y, pm.cpu()):.4f}"
 
 
 def bench_knn():
@@ -136,12 +151,7 @@ def bench_knn():
     tc, pc = timed(lambda: mc.predict(query))
     ts, ps = timed(lambda: ss.predict(query.numpy()))
     row_sk = f"{(ps == query_y.numpy()).mean():.4f}"
-    row_mps, tm = "-", None
-    if MPS:
-        mps_x, mps_y, mps_q = cpu_x.to("mps"), cpu_y.to("mps"), query.to("mps")
-        mm = ToKNN(5).fit(mps_x, mps_y)
-        tm, pm = timed(lambda: mm.predict(mps_q))
-        row_mps = f"{accuracy_score(query_y, pm.cpu()):.4f}"
+    tm, row_mps = _bench_knn_mps(cpu_x, cpu_y, query, query_y)
     print(ROW.format("knn predict-2k", "seconds", fmt(tc), fmt(tm), fmt(ts)))
     print(
         ROW.format(
@@ -162,8 +172,7 @@ def bench_tree():
     cpu_y = (cpu_x[:, 0] > 0).long()
     tc, mc = timed(lambda: ToTree(max_depth=6).fit(cpu_x, cpu_y))
     ts, ss = timed(lambda: SkTree(max_depth=6).fit(cpu_x.numpy(), cpu_y.numpy()))
-    row_mps, tm = "-", None
-    acc_mps = "-"
+    tm, acc_mps = None, "-"
     if MPS:
         mps_x, mps_y = cpu_x.to("mps"), cpu_y.to("mps")
         tm, mm = timed(lambda: ToTree(max_depth=6).fit(mps_x, mps_y))

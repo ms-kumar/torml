@@ -50,12 +50,12 @@ task                metric                  torml-cpu torml-mps sklearn-cpu
 =================== ======================= ========= ======== ===========
 linreg fit          seconds (best of 3)     0.008     0.015    0.010
 linreg              R²                      0.999662  0.999662 0.999662
-kmeans fit          seconds (best of 3)     1.977     3.384    0.269
+kmeans fit          seconds (best of 3)     1.619     3.540    0.261
 kmeans              inertia (lower better)  366949.9  366817.4 367078.0
 knn fit-50k         seconds (best of 3)     0.001     -        0.020
-knn predict-2k      seconds                 0.930     0.760    0.260
+knn predict-2k      seconds                 0.928     0.774    0.258
 knn                 accuracy                0.9160    0.9160   0.9160
-tree fit-50k        seconds (best of 3)     0.072     0.158    0.059
+tree fit-50k        seconds (best of 3)     0.072     0.148    0.059
 tree                accuracy                1.0000    1.0000   1.0000
 scaler              seconds (best of 3)     0.003     0.004    0.006
 =================== ======================= ========= ======== ===========
