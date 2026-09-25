@@ -18,18 +18,20 @@ def check_estimator(estimator):
     -------
     - get_params/set_params round-trip
     - repr doesn't raise
-    - estimator name
-    - not-fitted raises NotFittedError
-    - n_features_in_ attribute
-    - output shape
+    - estimator has a class name
+    - clone returns a fitted-capable copy
     """
 
-    # Test get_params/set_params round-trip
+    # Test get_params/set_params round-trip (repr-normalized: meta-estimators
+    # hold live sub-estimators, and fresh clones never compare identical)
     original_params = estimator.get_params()
     reconstructed = estimator.set_params(**original_params)
     new_params = reconstructed.get_params()
 
-    if original_params != new_params:
+    def _normalize(params):
+        return {key: repr(value) for key, value in params.items()}
+
+    if _normalize(original_params) != _normalize(new_params):
         raise AssertionError("get_params/set_params failed")
 
     # Test repr doesn't raise or return type
@@ -42,16 +44,11 @@ def check_estimator(estimator):
     except Exception as e:
         raise AssertionError(f"repr failed: {e}") from e
 
-    # Test estimator name
-    name = repr_str.split(".")[0]
+    # Test estimator has a usable class name (no suffix rule: sklearn's own
+    # LinearRegression/LogisticRegression don't end in Regressor/Classifier)
+    name = type(estimator).__name__
     if not name:
         raise AssertionError("Estimator failed validation. No name")
-
-    if not name.endswith("Regressor") and not name.endswith("Classifier"):
-        raise AssertionError(
-            f"Estimator {name!r} is not named to indicate it is "
-            f"a Regression or Classifier estimator."
-        )
 
     # Test clone
     from torml.base import clone

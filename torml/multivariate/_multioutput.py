@@ -40,6 +40,28 @@ class MultiOutputRegressor(RegressorMixin):
     def __init__(self, estimator):
         self.estimator = estimator
 
+    def get_params(self, deep=True):
+        """Get parameters including ``estimator__param`` entries."""
+        params = {"estimator": self.estimator}
+        if deep and isinstance(self.estimator, BaseEstimator):
+            for k, v in self.estimator.get_params(deep=True).items():
+                params[f"estimator__{k}"] = v
+        return params
+
+    def set_params(self, **params):
+        """Set parameters including ``estimator__param`` entries."""
+        nested = {}
+        for key, value in params.items():
+            if key == "estimator":
+                self.estimator = value
+            elif key.startswith("estimator__"):
+                nested[key.split("__", 1)[1]] = value
+            else:
+                raise ValueError(f"Invalid parameter {key!r} for MultiOutputRegressor.")
+        if nested:
+            self.estimator = clone(self.estimator).set_params(**nested)
+        return self
+
     def fit(self, X, y):
         """Fit one clone per target column.
 
@@ -119,6 +141,30 @@ class MultiOutputClassifier(ClassifierMixin):
 
     def __init__(self, estimator):
         self.estimator = estimator
+
+    def get_params(self, deep=True):
+        """Get parameters including ``estimator__param`` entries."""
+        params = {"estimator": self.estimator}
+        if deep and isinstance(self.estimator, BaseEstimator):
+            for k, v in self.estimator.get_params(deep=True).items():
+                params[f"estimator__{k}"] = v
+        return params
+
+    def set_params(self, **params):
+        """Set parameters including ``estimator__param`` entries."""
+        nested = {}
+        for key, value in params.items():
+            if key == "estimator":
+                self.estimator = value
+            elif key.startswith("estimator__"):
+                nested[key.split("__", 1)[1]] = value
+            else:
+                raise ValueError(
+                    f"Invalid parameter {key!r} for MultiOutputClassifier."
+                )
+        if nested:
+            self.estimator = clone(self.estimator).set_params(**nested)
+        return self
 
     def fit(self, X, y):
         """Fit one clone per target column.
