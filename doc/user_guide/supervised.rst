@@ -1,44 +1,21 @@
 Supervised learning
 ===================
 
-Estimators follow the scikit-learn shape: hyperparameters in ``__init__``,
-``fit`` returns ``self``, learned attributes end with ``_``.
+Supervised estimators learn from labeled pairs ``(X, y)``. They all follow
+the same shape:
 
-Regression with ``LinearRegression``
-------------------------------------
+- Hyperparameters go in ``__init__`` and are stored unchanged.
+- ``fit(X, y)`` learns and returns ``self`` (so calls chain).
+- Learned attributes end with ``_``: ``coef_``, ``classes_``.
+- ``predict(X)`` needs a fitted estimator, otherwise ``NotFittedError``.
 
-Closed-form least squares via ``torch.linalg.lstsq``:
+.. toctree::
+   :maxdepth: 1
 
-.. code-block:: python
+   classification
+   regression
 
-   model = LinearRegression(fit_intercept=True).fit(X_train, y_train)
-   y_pred = model.predict(X_test)
-
-Classification with ``KNeighborsClassifier``
---------------------------------------------
-
-Majority vote over the ``n_neighbors`` closest training points:
-
-.. code-block:: python
-
-   clf = KNeighborsClassifier(n_neighbors=5).fit(X_train, y_train)
-   clf.predict(X_test)
-   clf.predict_proba(X_test)
-
-Scaling inputs
---------------
-
-Fit the scaler on training data only, then apply to both splits:
-
-.. code-block:: python
-
-   scaler = StandardScaler().fit(X_train)
-   X_train_s = scaler.transform(X_train)
-   X_test_s = scaler.transform(X_test)
-
-Validating with held-out data
------------------------------
-
-.. code-block:: python
-
-   scores = cross_val_score(model, X, y, cv=5)
+Pick a page by task. Classification predicts discrete labels
+(``KNeighborsClassifier``, ``LogisticRegression``, trees, forests, SVMs,
+naive Bayes, LDA); regression predicts continuous targets
+(``LinearRegression``, ``KNeighborsRegressor``, trees, GPs, PLS).
