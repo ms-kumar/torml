@@ -39,6 +39,33 @@ scikit-learn's Cython is ~1.5x faster than torml's Python CART loops, and
 kNN prediction at 10k, where scikit-learn's ball tree (~0.3s) beats torml's
 exact brute-force pairwise distances (~5s).
 
+At 50k samples with an MPS column
+---------------------------------
+
+``benchmarks/compare_500k.py`` reruns the suite at 50k samples per task on
+torml-CPU, torml-MPS, and sklearn-CPU (kNN predicts 2k queries):
+
+=================== ======================= ========= ======== ===========
+task                metric                  torml-cpu torml-mps sklearn-cpu
+=================== ======================= ========= ======== ===========
+linreg fit          seconds (best of 3)     0.008     0.015    0.010
+linreg              R²                      0.999662  0.999662 0.999662
+kmeans fit          seconds (best of 3)     1.977     3.384    0.269
+kmeans              inertia (lower better)  366949.9  366817.4 367078.0
+knn fit-50k         seconds (best of 3)     0.001     -        0.020
+knn predict-2k      seconds                 0.930     0.760    0.260
+knn                 accuracy                0.9160    0.9160   0.9160
+tree fit-50k        seconds (best of 3)     0.072     0.158    0.059
+tree                accuracy                1.0000    1.0000   1.0000
+scaler              seconds (best of 3)     0.003     0.004    0.006
+=================== ======================= ========= ======== ===========
+
+Takeaways: correctness still ties; MPS helps kNN prediction slightly but
+kernel-launch overhead dominates the smaller ops at this scale (and large
+``linalg`` calls fall back to CPU with a warning). sklearn's ball tree
+(~0.26s) beats exact brute-force kNN predict (~0.9s) — the price of exact
+neighbors without an index structure.
+
 Where torml is genuinely better
 -------------------------------
 
