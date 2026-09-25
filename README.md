@@ -2,9 +2,10 @@
 
 [![CI](https://github.com/ms-kumar/torml/actions/workflows/ci.yml/badge.svg)](https://github.com/ms-kumar/torml/actions/workflows/ci.yml)
 [![Tests](https://github.com/ms-kumar/torml/actions/workflows/test.yml/badge.svg)](https://github.com/ms-kumar/torml/actions/workflows/test.yml)
+[![Bandit](https://github.com/ms-kumar/torml/actions/workflows/bandit.yml/badge.svg)](https://github.com/ms-kumar/torml/actions/workflows/bandit.yml)
+[![PyPI](https://img.shields.io/pypi/v/torml.svg)](https://pypi.org/project/torml/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/ms-kumar/torml/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-green)](RELEASES.md)
 
 **torml** is a scikit-learn-style machine learning library implemented from
 scratch with [PyTorch](https://pytorch.org/) (`torch.Tensor`, `torch.linalg`)
@@ -14,31 +15,42 @@ If you know scikit-learn, you know torml: estimators expose `fit` /
 `predict` / `transform` / `score` / `get_params` / `set_params`, hyperparameters
 live in `__init__`, `fit` returns `self`, and learned attributes end with `_`
 (`coef_`, `classes_`, `n_features_in_`). The difference is what's underneath:
-vectorized PyTorch tensor ops, so models run on CPU (and compose with the
-torch ecosystem) without a second numerical stack.
+vectorized PyTorch tensor ops, so models compose with the torch ecosystem
+without a second numerical stack.
 
-## Features
+## Highlights
 
-25 modules, 280 tests, typed and lint-clean (`black`, `isort`, `flake8`,
-`pylint` all enforced in CI):
+- **25 estimator modules** — linear models, neighbors, trees, forests, SVMs,
+  clustering, mixture models, naive Bayes, discriminant analysis, Gaussian
+  processes, preprocessing, pipelines, model selection, metrics, and more.
+- **280 tests**, typed and lint-clean — `black`, `isort`, `flake8`, `pylint`,
+  Bandit, and CodeQL all enforced in CI across Python 3.10–3.12.
+- **One runtime dependency**: `torch>=2.1`.
+- **Security-first supply chain** — pinned lockfile (`uv.lock`), SHA-pinned
+  GitHub Actions, least-privilege workflows, Dependabot + `pip-audit` clean.
+  See [`SECURITY.md`](SECURITY.md).
 
-| Area | Modules |
-| --- | --- |
-| Core | `base` (`BaseEstimator`, `clone`, mixins), `utils` (validation, random state, tags) |
-| Supervised | `linear_model`, `neighbors`, `naive_bayes`, `tree`, `svm`, `discriminant_analysis`, `gaussian_process` |
-| Unsupervised | `cluster`, `mixture`, `decomposition`, `manifold` |
-| Meta-estimators | `ensemble` (voting, bagging, forests), `multiclass`, `multivariate`, `pipelines` |
-| Data & evaluation | `preprocessing`, `feature_extraction`, `feature_selection`, `random_projection`, `cross_decomposition`, `covariance`, `semi_supervised` |
-| Evaluation | `metrics`, `model_selection` (`train_test_split`, `KFold`, `cross_val_score`, `GridSearchCV`) |
+## Installation
 
-## Install
-
-Requires Python 3.10–3.12 and PyTorch ≥ 2.1:
+Requires Python 3.10–3.12:
 
 ```bash
+pip install torml
+```
+
+With test and docs extras:
+
+```bash
+pip install "torml[test]"
+pip install "torml[doc]"
+```
+
+From source (e.g. to follow `main`):
+
+```bash
+git clone https://github.com/ms-kumar/torml.git
+cd torml
 pip install -e .
-pip install -e ".[test]"   # pytest
-pip install -e ".[doc]"    # sphinx docs
 ```
 
 With [uv](https://docs.astral.sh/uv/) (pinned interpreter + lockfile):
@@ -98,7 +110,7 @@ More in [`examples/`](examples/) (one runnable script per module) and the
 - API reference + user guide: [`doc/`](doc/) — build with
   `sphinx-build -b html doc doc/_build` (needs `uv sync --extra doc`)
 - Wiki: https://github.com/ms-kumar/torml/wiki (conventions, validation utilities, module status)
-- Examples: [`examples/`](examples/) — runnable scripts, verified in CI-adjacent local runs
+- Examples: [`examples/`](examples/) — runnable scripts for every module
 - Benchmarks: [`benchmarks/`](benchmarks/) (micro-benchmarks, excluded from the sdist)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md) — dev setup, style, PR checklist
 - Coding guidelines: [`TORML_CODING_GUIDELINES.md`](TORML_CODING_GUIDELINES.md)
@@ -111,6 +123,7 @@ More in [`examples/`](examples/) (one runnable script per module) and the
 uv run pytest                        # 280 tests
 uv run pre-commit run --all-files    # black, isort, flake8, pylint
 uv run sphinx-build -b html doc doc/_build   # docs (zero warnings)
+python -m build && twine check dist/*        # packaging check
 ```
 
 ## Security
