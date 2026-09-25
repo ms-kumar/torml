@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "torml"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "A scikit-learn-style machine learning library with a PyTorch backend"
 readme = "README.md"
 license = { text = "MIT" }

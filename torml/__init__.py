@@ -13,6 +13,9 @@ and learned attributes follow scikit-learn naming conventions.
 
 """
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = "0.0.0"
+try:
+    __version__ = version("torml")
+except PackageNotFoundError:
+    __version__ = "0.0.0"

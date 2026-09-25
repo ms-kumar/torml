@@ -3,6 +3,22 @@
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+### Contributors
+
+## 0.1.0 - 2026-09-25
+
+### Added
 - Added `torml.metrics.accuracy_score`, `torml.metrics.mean_squared_error`, `torml.metrics.r2_score` with tests in `tests/metrics/`.
 - Added `torml.linear_model.LinearRegression` (closed-form via `torch.linalg.lstsq`) and `torml.linear_model.LogisticRegression` with tests in `tests/linear_model/`.
 - Added `torml.model_selection.train_test_split`, `torml.model_selection.KFold`, and `torml.model_selection.cross_val_score` with tests in `tests/model_selection/`.
