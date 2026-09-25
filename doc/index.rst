@@ -3,7 +3,11 @@ torml: PyTorch-backed scikit-learn-style ML library
 
 ``torml`` reimplements the scikit-learn estimator API (``fit`` / ``predict`` /
 ``transform`` / ``score`` / ``get_params`` / ``set_params``) from scratch with
-PyTorch (``torch.Tensor``, ``torch.linalg``) as the numerical backend.
+PyTorch (``torch.Tensor``, ``torch.linalg``) as the numerical backend —
+no NumPy, SciPy, or scikit-learn at runtime.
+
+Start with :doc:`quickstart`, learn the patterns in
+:doc:`user_guide/supervised`, or jump straight to :doc:`api`.
 
 .. toctree::
    :maxdepth: 2

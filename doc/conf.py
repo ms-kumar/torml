@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 project = "torml"
 author = "torml contributors"
-release = "0.1.0.dev0"
+release = "0.1.0"
 
 extensions = [
     "sphinx.ext.autodoc",
