@@ -35,7 +35,7 @@ Changelog = "https://github.com/ms-kumar/torml/blob/main/RELEASES.md"
 test = ["pytest>=7", "pytest-cov>=4"]
 dev = [
     "pre-commit>=3",
-    "black==26.5.1",
+    "black==26.10.0",
     "isort>=5.13",
     "flake8>=7",
     "pylint>=3",
